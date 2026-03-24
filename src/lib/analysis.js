@@ -1,0 +1,127 @@
+const CHINESE_RE = /^[\u3400-\u4dbf\u4e00-\u9fff]{1,4}$/
+const ENGLISH_RE = /^[A-Za-z]+(?:['-][A-Za-z]+)*$/
+
+export function normalizeInput(value) {
+  return String(value ?? '').trim()
+}
+
+export function getInputType(value) {
+  const normalized = normalizeInput(value)
+
+  if (CHINESE_RE.test(normalized)) {
+    return 'chinese'
+  }
+
+  if (ENGLISH_RE.test(normalized)) {
+    return 'english'
+  }
+
+  return 'unknown'
+}
+
+export function validateInput(value) {
+  const normalized = normalizeInput(value)
+
+  if (!normalized) {
+    return { ok: false, message: '请输入中文词或单个英文单词' }
+  }
+
+  if (/[\u3400-\u4dbf\u4e00-\u9fff]/.test(normalized) && /[A-Za-z]/.test(normalized)) {
+    return { ok: false, message: '请输入中文词或单个英文单词' }
+  }
+
+  if (/[\u3400-\u4dbf\u4e00-\u9fff]/.test(normalized) && !CHINESE_RE.test(normalized)) {
+    return { ok: false, message: '中文输入需为 1 到 4 个汉字' }
+  }
+
+  if (/[A-Za-z]/.test(normalized) && !ENGLISH_RE.test(normalized)) {
+    return { ok: false, message: '英文输入仅支持单个单词' }
+  }
+
+  if (getInputType(normalized) === 'unknown') {
+    return { ok: false, message: '请输入中文词或单个英文单词' }
+  }
+
+  return { ok: true }
+}
+
+export function getSystemPrompt() {
+  return `你是一个遵循 ljg-word 方法论的解词助手。目标不是翻译，而是帮助用户掌握一个字或词的深层含义。
+
+请严格输出 JSON，不要输出 Markdown 代码块，不要输出额外说明。
+
+{
+  "word": "词本身",
+  "phonetic": "音标或拼音",
+  "translation": "简短翻译",
+  "originalImage": "用一句话描述这个字/词最原始、最物理的画面",
+  "coreSymbolParts": ["要素1", "要素2", "要素3"],
+  "coreSymbolResult": "结果",
+  "explanation": "2到3段深层解释，段落之间用 || 分隔。解释要有洞见，能串起词源、古义、现代语境与跨领域联系。重要词可用 **加粗**。",
+  "epiphanyEn": "一句具有哲学高度的英文金句",
+  "epiphanyCn": "对应的中文金句",
+  "mood": "从 contemplative、sharp、warm、technical、research、creative、business 中选一个"
+}`
+}
+
+export function buildPrompt(word, inputType) {
+  if (inputType === 'chinese') {
+    return `请按照 ljg-word 的解词原则，深度解析这个中文输入：「${word}」。
+
+硬性要求：
+1. 目标不是普通释义，而是解释这个字/词的深层结构与精神重心。
+2. 原始画面：如果是单字，尽量回到字形、构件、古义或最初物理画面；如果是词语，解释它内部组合后形成的原始场景。
+3. 核心意象：提炼成 3 个要素 + 1 个结果的公式。
+4. 深层解释：写 2 到 3 段中文，展示古义、现代使用、文学/哲学/日常之间的内在连线，而不是字典式罗列。
+5. 一语道破：给出中英双语金句，必须有哲学高度。
+6. 输出必须符合 JSON 结构。`
+  }
+
+  return `请按照 ljg-word 的原始方法，深度解析这个英文单词："${word}"。
+
+硬性要求：
+1. 目标不是翻译，而是让用户掌握它的深层含义和现代用法。
+2. 原始画面：追到词源最物理、最可感的画面。
+3. 核心意象：提炼成 3 个要素 + 1 个结果的公式。
+4. 深层解释：用中文写 2 到 3 段，展示词源、语义扩展、跨领域用法之间的内在联系，而不是词典释义。
+5. 一语道破：给出中英双语金句，必须有哲学高度。
+6. 输出必须符合 JSON 结构。
+
+再次强调：目标不是翻译。`
+}
+
+function extractJsonText(content) {
+  const cleaned = String(content ?? '')
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+
+  const firstBrace = cleaned.indexOf('{')
+  const lastBrace = cleaned.lastIndexOf('}')
+
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    return cleaned.slice(firstBrace, lastBrace + 1)
+  }
+
+  return cleaned
+}
+
+export function parseWordAnalysis(content, rawInput, inputType) {
+  const normalized = normalizeInput(rawInput)
+  const jsonText = extractJsonText(content)
+  const parsed = JSON.parse(jsonText)
+
+  return {
+    word: parsed.word || normalized,
+    inputType,
+    phonetic: parsed.phonetic || '',
+    translation: parsed.translation || '',
+    originalImage: parsed.originalImage || '',
+    coreSymbolParts: Array.isArray(parsed.coreSymbolParts) ? parsed.coreSymbolParts.slice(0, 3) : [],
+    coreSymbolResult: parsed.coreSymbolResult || '',
+    explanation: parsed.explanation || '',
+    epiphanyEn: parsed.epiphanyEn || '',
+    epiphanyCn: parsed.epiphanyCn || '',
+    mood: parsed.mood || 'contemplative',
+  }
+}
