@@ -1,6 +1,7 @@
 import './style.css'
 import html2canvas from 'html2canvas'
 import { validateInput } from './lib/analysis.js'
+import { prepareExportNode } from './lib/export.js'
 import { renderCardMarkup } from './lib/render.js'
 
 // ═══════════════════════════════════════════════
@@ -8,6 +9,7 @@ import { renderCardMarkup } from './lib/render.js'
 // ═══════════════════════════════════════════════
 const landing = document.getElementById('landing')
 const cardView = document.getElementById('card-view')
+const searchForm = document.getElementById('search-form')
 const searchInput = document.getElementById('search-input')
 const searchBtn = document.getElementById('search-btn')
 const backBtn = document.getElementById('back-btn')
@@ -16,6 +18,10 @@ const goBackBtn = document.getElementById('go-back-btn')
 const wordCard = document.getElementById('word-card')
 const notFound = document.getElementById('not-found')
 const suggestionTags = document.getElementById('suggestion-tags')
+let isSearching = false
+let isComposing = false
+let pendingSearchAfterCompose = false
+let compositionFallbackTimer = null
 
 // ═══════════════════════════════════════════════
 // Sample suggestions
@@ -84,6 +90,12 @@ async function handleSearch() {
     return
   }
 
+  if (isSearching) {
+    return
+  }
+
+  isSearching = true
+
   showView('card-view')
   notFound.classList.add('hidden')
 
@@ -120,7 +132,26 @@ async function handleSearch() {
     wordCard.style.display = 'none'
     notFound.classList.remove('hidden')
     notFound.querySelector('p').textContent = `解析失败：${err.message}。请稍后重试。`
+  } finally {
+    isSearching = false
   }
+}
+
+function requestSearch() {
+  if (isComposing) {
+    pendingSearchAfterCompose = true
+    if (compositionFallbackTimer) {
+      clearTimeout(compositionFallbackTimer)
+    }
+    compositionFallbackTimer = setTimeout(() => {
+      if (pendingSearchAfterCompose) {
+        pendingSearchAfterCompose = false
+        handleSearch()
+      }
+    }, 300)
+    return
+  }
+  handleSearch()
 }
 
 // ═══════════════════════════════════════════════
@@ -152,6 +183,9 @@ async function handleDownload() {
       logging: false,
       width: wordCard.scrollWidth,
       height: wordCard.scrollHeight,
+      onclone: (clonedDocument) => {
+        prepareExportNode(clonedDocument.getElementById('word-card'))
+      },
     })
 
     const link = document.createElement('a')
@@ -172,9 +206,31 @@ async function handleDownload() {
 // ═══════════════════════════════════════════════
 // Event Listeners
 // ═══════════════════════════════════════════════
-searchBtn.addEventListener('click', handleSearch)
-searchInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') handleSearch()
+searchForm?.addEventListener('submit', (event) => {
+  event.preventDefault()
+  requestSearch()
+})
+searchBtn.addEventListener('pointerdown', requestSearch)
+searchBtn.addEventListener('click', requestSearch)
+searchInput.addEventListener('compositionstart', () => {
+  isComposing = true
+})
+searchInput.addEventListener('compositionend', () => {
+  isComposing = false
+  if (pendingSearchAfterCompose) {
+    pendingSearchAfterCompose = false
+    if (compositionFallbackTimer) {
+      clearTimeout(compositionFallbackTimer)
+      compositionFallbackTimer = null
+    }
+    handleSearch()
+  }
+})
+searchInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    requestSearch()
+  }
 })
 
 backBtn.addEventListener('click', showLanding)

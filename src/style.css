@@ -87,7 +87,6 @@ body {
    ════════════════════════════════════════════════ */
 #landing {
   position: relative;
-  display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
@@ -96,6 +95,10 @@ body {
     radial-gradient(circle at bottom right, rgba(196, 181, 160, 0.25), transparent 30%),
     linear-gradient(168deg, #F7F5F2 0%, #EDE9E3 50%, #E4DFD8 100%);
   overflow: hidden;
+}
+
+#landing.active {
+  display: flex;
 }
 
 .landing-bg {
@@ -173,6 +176,11 @@ body {
   right: 5%;
   bottom: 8%;
   background: radial-gradient(circle, rgba(184, 216, 190, 0.18), transparent 72%);
+}
+
+.landing-content > * {
+  position: relative;
+  z-index: 1;
 }
 
 .site-title {
@@ -253,6 +261,7 @@ body {
   right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 3;
   width: 2.75rem;
   height: 2.75rem;
   display: flex;
@@ -264,6 +273,10 @@ body {
   border-radius: 50%;
   cursor: pointer;
   transition: var(--transition);
+}
+
+.search-box button svg {
+  pointer-events: none;
 }
 
 .search-box button:hover {
@@ -395,8 +408,9 @@ body {
 .card-container {
   flex: 1;
   display: flex;
+  align-items: flex-start;
   justify-content: center;
-  padding: 2.5rem 2rem 4rem;
+  padding: 2rem 1.5rem 3rem;
 }
 
 /* ════════════════════════════════════════════════
@@ -404,7 +418,7 @@ body {
    遵循 ljg-card 的品味准则
    ════════════════════════════════════════════════ */
 .word-card {
-  width: 1080px;
+  width: min(960px, 100%);
   max-width: 100%;
   background: var(--bg);
   border-radius: 2rem;
@@ -413,6 +427,7 @@ body {
   overflow: hidden;
   font-family: var(--sans);
   box-shadow: 0 30px 80px -40px rgba(45, 41, 38, 0.35);
+  align-self: flex-start;
 }
 
 /* 噪点纹理 */
@@ -427,7 +442,7 @@ body {
 
 /* ── Card Sections ── */
 .card-header {
-  padding: 72px 72px 0;
+  padding: 56px 56px 0;
   position: relative;
   z-index: 2;
 }
@@ -439,14 +454,14 @@ body {
   opacity: 0.6;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .card-meta-row {
   display: flex;
   gap: 0.75rem;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .card-badge {
@@ -470,38 +485,43 @@ body {
 .card-word {
   font-family: var(--serif);
   font-weight: 900;
-  line-height: 1;
+  line-height: 0.92;
   letter-spacing: -0.03em;
   color: var(--ink);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .card-word-cn {
-  font-size: 240px;
+  font-size: clamp(8rem, 18vw, 12rem);
 }
 
 .card-word-en {
-  font-size: 120px;
+  font-size: clamp(4.2rem, 10vw, 6.3rem);
 }
 
 .card-phonetic {
   font-family: var(--mono);
-  font-size: 22px;
+  font-size: clamp(1rem, 2vw, 1.25rem);
   color: var(--ink-light);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .card-translation {
   font-family: var(--sans);
-  font-size: 28px;
+  font-size: clamp(1.1rem, 2.6vw, 1.5rem);
   color: var(--ink-light);
   font-weight: 500;
-  max-width: 24ch;
+  max-width: 20ch;
+  line-height: 1.45;
+  text-wrap: balance;
 }
 
 /* ── Core Semantics Section ── */
 .card-body {
-  padding: 56px 72px;
+  padding: 40px 56px;
   position: relative;
   z-index: 2;
 }
@@ -509,8 +529,8 @@ body {
 .card-original-image {
   background: var(--green);
   border-radius: var(--radius-md);
-  padding: 32px 36px;
-  margin-bottom: 40px;
+  padding: 26px 28px;
+  margin-bottom: 28px;
   border: 1px solid rgba(45, 41, 38, 0.08);
 }
 
@@ -526,18 +546,22 @@ body {
 
 .card-original-image .section-content {
   font-family: var(--serif);
-  font-size: 36px;
-  line-height: 1.5;
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  line-height: 1.55;
   color: var(--ink);
   font-weight: 600;
+  text-wrap: balance;
 }
 
 /* ── Core Symbol (公式) ── */
 .card-core-symbol {
   position: relative;
-  padding: 40px 0;
-  margin-bottom: 40px;
+  padding: 26px 18px 30px;
+  margin-bottom: 30px;
   text-align: center;
+  background: rgba(255, 255, 255, 0.26);
+  border: 1px solid rgba(45, 41, 38, 0.05);
+  border-radius: 1.35rem;
 }
 
 .card-core-symbol::before,
@@ -555,26 +579,87 @@ body {
 .card-core-symbol::after { bottom: 0; }
 
 .card-formula {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
   font-family: var(--serif);
-  font-size: 44px;
   color: var(--ink);
+  width: min(100%, 34rem);
+  margin: 0 auto;
+}
+
+.formula-parts {
+  display: grid;
+  gap: 0.7rem;
+  width: 100%;
+}
+
+.formula-parts-1 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.formula-parts-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.formula-parts-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.formula-part-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.95rem;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(45, 41, 38, 0.07);
+  box-shadow: 0 10px 20px rgba(45, 41, 38, 0.04);
+}
+
+.formula-token {
+  display: inline-block;
+  font-size: clamp(1rem, 2.4vw, 1.2rem);
+  line-height: 1.2;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
-.formula-operator {
-  color: var(--pink);
-  margin: 0 0.15em;
+.formula-result-wrap {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+  width: 100%;
 }
 
-.formula-result {
+.formula-arrow {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: rgba(45, 41, 38, 0.4);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.formula-result-card {
+  width: min(100%, 18rem);
+  padding: 0.9rem 1rem;
+  border-radius: 1.05rem;
+  background: linear-gradient(135deg, rgba(233, 30, 99, 0.08), rgba(196, 181, 160, 0.18));
+  border: 1px solid rgba(139, 94, 60, 0.16);
   color: var(--pink);
+  font-size: clamp(1.25rem, 2.4vw, 1.55rem);
+  font-weight: 700;
+  line-height: 1.22;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 /* ── Explanation ── */
 .card-explanation {
-  margin-bottom: 48px;
+  display: grid;
+  gap: 0.9rem;
+  margin-bottom: 36px;
 }
 
 .card-explanation .section-label {
@@ -588,15 +673,18 @@ body {
 }
 
 .card-explanation p {
-  font-size: 24px;
-  line-height: 1.8;
+  font-size: clamp(1.02rem, 1.8vw, 1.16rem);
+  line-height: 1.82;
   color: #4a4a4a;
-  max-width: 56ch;
-  margin-bottom: 16px;
-}
-
-.card-explanation p:last-child {
+  max-width: none;
   margin-bottom: 0;
+  padding: 1rem 1.05rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(45, 41, 38, 0.05);
+  border-left: 3px solid rgba(139, 94, 60, 0.28);
+  border-radius: 0.9rem;
+  box-shadow: 0 12px 28px rgba(45, 41, 38, 0.04);
+  text-wrap: pretty;
 }
 
 .card-explanation strong {
@@ -607,41 +695,52 @@ body {
 /* ── Epiphany (金句) ── */
 .card-epiphany {
   background: var(--ink);
-  margin: 0 -72px;
-  padding: 56px 72px;
+  margin: 0 -56px;
+  padding: 42px 56px;
   position: relative;
   z-index: 2;
+  display: grid;
+  gap: 0.9rem;
+  justify-items: center;
+  text-align: center;
 }
 
 .section-label-invert {
   color: rgba(250, 250, 248, 0.56);
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
 .card-epiphany .epiphany-text {
   font-family: var(--serif);
-  font-size: 36px;
+  font-size: clamp(1.3rem, 2.4vw, 1.75rem);
   line-height: 1.6;
   color: var(--white);
   font-weight: 400;
-  max-width: 56ch;
+  width: min(100%, 30ch);
+  position: relative;
+  padding-top: 0.95rem;
+  margin-inline: auto;
+  text-wrap: pretty;
+}
+
+.card-epiphany .epiphany-text:not(.epiphany-secondary)::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2.5rem;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(233, 30, 99, 0.9);
+  transform: translateX(-50%);
 }
 
 .card-epiphany .epiphany-secondary {
-  margin-top: 14px;
+  margin-top: -0.1rem;
+  width: min(100%, 28ch);
   opacity: 0.82;
-}
-
-.card-epiphany .epiphany-mark {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--pink);
-  margin-right: 16px;
-  vertical-align: middle;
-  position: relative;
-  top: -2px;
+  font-size: clamp(1.02rem, 1.85vw, 1.18rem);
+  line-height: 1.7;
 }
 
 /* ── Colophon ── */
@@ -649,7 +748,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 28px 72px;
+  padding: 22px 56px;
   position: relative;
   z-index: 2;
 }
@@ -838,15 +937,16 @@ body {
   }
 
   .card-container {
-    padding: 1rem;
+    padding: 0.85rem;
   }
 
   .word-card {
     width: 100%;
+    border-radius: 1.5rem;
   }
 
   .card-header {
-    padding: 40px 32px 0;
+    padding: 28px 22px 0;
   }
 
   .card-meta-row {
@@ -856,43 +956,92 @@ body {
   }
 
   .card-word-cn {
-    font-size: 120px;
+    font-size: 96px;
   }
 
   .card-word-en {
-    font-size: 64px;
+    font-size: 52px;
+  }
+
+  .card-translation {
+    font-size: 1.125rem;
   }
 
   .card-body {
-    padding: 32px;
+    padding: 24px 22px 22px;
   }
 
   .card-original-image {
-    padding: 24px;
+    padding: 20px 18px;
   }
 
   .card-original-image .section-content {
-    font-size: 24px;
+    font-size: 1.35rem;
   }
 
   .card-formula {
-    font-size: 28px;
+    max-width: 100%;
+    gap: 0.7rem;
+  }
+
+  .formula-parts {
+    gap: 0.5rem;
+  }
+
+  .formula-parts-2,
+  .formula-parts-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .formula-parts-3 .formula-part-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .formula-part-card {
+    min-height: auto;
+    padding: 0.78rem 0.8rem;
+  }
+
+  .formula-token {
+    font-size: 1rem;
+  }
+
+  .formula-result-card {
+    width: 100%;
+    max-width: 100%;
+    font-size: 1.15rem;
+    padding: 0.85rem 0.9rem;
   }
 
   .card-explanation p {
-    font-size: 18px;
+    font-size: 0.98rem;
+    line-height: 1.76;
+    padding: 0.9rem 0.95rem;
   }
 
   .card-epiphany {
-    margin: 0 -32px;
-    padding: 40px 32px;
+    margin: 0 -22px;
+    padding: 30px 22px;
+    gap: 0.75rem;
   }
 
   .card-epiphany .epiphany-text {
-    font-size: 24px;
+    font-size: 1.12rem;
+    width: min(100%, 22ch);
+    padding-top: 0.8rem;
+  }
+
+  .card-epiphany .epiphany-text:not(.epiphany-secondary)::before {
+    width: 2rem;
+    height: 2px;
+  }
+
+  .card-epiphany .epiphany-secondary {
+    width: min(100%, 20ch);
+    font-size: 0.98rem;
   }
 
   .card-colophon {
-    padding: 20px 32px;
+    padding: 16px 22px;
   }
 }

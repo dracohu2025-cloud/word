@@ -29,11 +29,18 @@ export function renderCardMarkup(data) {
     ? word.charAt(0).toUpperCase() + word.slice(1)
     : word
   const wordClass = inputType === 'english' ? 'card-word-en' : 'card-word-cn'
-  const formulaParts = (data.coreSymbolParts || [])
-    .map(part => `<span>${part}</span>`)
-    .join('<span class="formula-operator">+</span>')
+  const coreSymbolParts = (data.coreSymbolParts || []).filter(Boolean).slice(0, 3)
+  const formulaParts = coreSymbolParts
+    .map(part => `<span class="formula-part-card"><span class="formula-token">${part}</span></span>`)
+    .join('')
   const formulaMarkup = formulaParts
-    ? `${formulaParts}<span class="formula-operator">=</span><span class="formula-result">${data.coreSymbolResult || ''}</span>`
+    ? `
+      <div class="formula-parts formula-parts-${coreSymbolParts.length}">${formulaParts}</div>
+      <div class="formula-result-wrap">
+        <div class="formula-arrow">意象归结</div>
+        <div class="formula-result-card">${data.coreSymbolResult || ''}</div>
+      </div>
+    `
     : ''
   const explanationMarkup = formatExplanationParagraphs(data.explanation)
   const domain = MOOD_LABELS[data.mood] || '语言'
@@ -70,9 +77,7 @@ export function renderCardMarkup(data) {
 
     <section class="card-epiphany animate-in animate-delay-5">
       <div class="section-label section-label-invert">一语道破 · Epiphany</div>
-      <div class="epiphany-text">
-        <span class="epiphany-mark"></span>${data.epiphanyEn || ''}
-      </div>
+      <div class="epiphany-text">${data.epiphanyEn || ''}</div>
       <div class="epiphany-text epiphany-secondary">${data.epiphanyCn || ''}</div>
     </section>
 

@@ -25,6 +25,8 @@ describe('render helpers', () => {
     })
 
     expect(markup).toContain('单词')
+    expect(markup).toContain('formula-part-card')
+    expect(markup).toContain('formula-result-card')
     expect(markup).toContain('chance')
     expect(markup).toContain('Meaning arrives to the one who notices.')
     expect(markup).toContain('深层解析')

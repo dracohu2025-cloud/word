@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
   <div id="app">
@@ -24,7 +23,7 @@
           <span class="title-char">词</span><span class="title-dot">·</span><span class="title-sub">一字一世界</span>
         </h1>
         <p class="site-desc">输入一个汉字或英文单词<br/>深度挖掘其灵魂深处的含义</p>
-        <div class="search-box">
+        <form id="search-form" class="search-box">
           <input 
             id="search-input" 
             type="text" 
@@ -32,13 +31,13 @@
             autocomplete="off"
             spellcheck="false"
           />
-          <button id="search-btn" type="button" aria-label="搜索">
+          <button id="search-btn" type="submit" aria-label="搜索">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
           </button>
-        </div>
+        </form>
         <p class="search-rules">中文支持 1-4 个汉字，英文仅支持单个单词。先解词，再铸卡。</p>
         <div id="suggestions" class="suggestions">
           <span class="suggestion-label">试试这些：</span>
