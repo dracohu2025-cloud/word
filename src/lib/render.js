@@ -1,6 +1,6 @@
 const INPUT_TYPE_LABELS = {
   english: '单词',
-  chinese: '中文词',
+  chinese: '汉字',
 }
 
 const MOOD_LABELS = {

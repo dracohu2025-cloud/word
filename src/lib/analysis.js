@@ -1,4 +1,4 @@
-const CHINESE_RE = /^[\u3400-\u4dbf\u4e00-\u9fff]{1,4}$/
+const CHINESE_RE = /^[\u3400-\u4dbf\u4e00-\u9fff]$/
 const ENGLISH_RE = /^[A-Za-z]+(?:['-][A-Za-z]+)*$/
 
 export function normalizeInput(value) {
@@ -23,15 +23,15 @@ export function validateInput(value) {
   const normalized = normalizeInput(value)
 
   if (!normalized) {
-    return { ok: false, message: '请输入中文词或单个英文单词' }
+    return { ok: false, message: '请输入单个汉字或单个英文单词' }
   }
 
   if (/[\u3400-\u4dbf\u4e00-\u9fff]/.test(normalized) && /[A-Za-z]/.test(normalized)) {
-    return { ok: false, message: '请输入中文词或单个英文单词' }
+    return { ok: false, message: '请输入单个汉字或单个英文单词' }
   }
 
   if (/[\u3400-\u4dbf\u4e00-\u9fff]/.test(normalized) && !CHINESE_RE.test(normalized)) {
-    return { ok: false, message: '中文输入需为 1 到 4 个汉字' }
+    return { ok: false, message: '中文输入仅支持单个汉字' }
   }
 
   if (/[A-Za-z]/.test(normalized) && !ENGLISH_RE.test(normalized)) {
@@ -39,7 +39,7 @@ export function validateInput(value) {
   }
 
   if (getInputType(normalized) === 'unknown') {
-    return { ok: false, message: '请输入中文词或单个英文单词' }
+    return { ok: false, message: '请输入单个汉字或单个英文单词' }
   }
 
   return { ok: true }
@@ -72,11 +72,11 @@ export function getSystemPrompt() {
 
 export function buildPrompt(word, inputType) {
   if (inputType === 'chinese') {
-    return `请按照 ljg-word 的解词原则，深度解析这个中文输入：「${word}」。
+    return `请按照 ljg-word 的解词原则，深度解析这个汉字：「${word}」。
 
 硬性要求：
-1. 目标不是普通释义，而是解释这个字/词的深层结构与精神重心。
-2. 原始画面：如果是单字，尽量回到字形、构件、古义或最初物理画面；如果是词语，解释它内部组合后形成的原始场景。
+1. 目标不是普通释义，而是解释这个汉字的深层结构与精神重心。
+2. 原始画面：尽量回到字形、构件、古义或最初物理画面。
 3. 核心意象：提炼成 3 个要素 + 1 个结果的公式。
 4. 深层解释：写 2 到 3 段中文，展示古义、现代使用、文学/哲学/日常之间的内在连线，而不是字典式罗列。
 5. 一语道破：给出中英双语金句，必须有哲学高度。

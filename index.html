@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>词卡 · 一字一世界</title>
-  <meta name="description" content="输入一个汉字或英文单词，深度挖掘其含义，生成精美词卡。" />
+  <meta name="description" content="输入单个汉字或英文单词，深度挖掘其含义，生成精美词卡。" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
@@ -22,12 +22,12 @@
         <h1 class="site-title">
           <span class="title-char">词</span><span class="title-dot">·</span><span class="title-sub">一字一世界</span>
         </h1>
-        <p class="site-desc">输入一个汉字或英文单词<br/>深度挖掘其灵魂深处的含义</p>
+        <p class="site-desc">输入单个汉字或英文单词<br/>深度挖掘其灵魂深处的含义</p>
         <form id="search-form" class="search-box">
           <input 
             id="search-input" 
             type="text" 
-            placeholder="输入汉字或英文单词，如「道」或「Serendipity」" 
+            placeholder="输入单个汉字或英文单词，如「道」或「Serendipity」" 
             autocomplete="off"
             spellcheck="false"
           />
@@ -38,7 +38,7 @@
             </svg>
           </button>
         </form>
-        <p class="search-rules">中文支持 1-4 个汉字，英文仅支持单个单词。先解词，再铸卡。</p>
+        <p class="search-rules">中文仅支持单个汉字，英文仅支持单个单词。先解词，再铸卡。</p>
         <div id="suggestions" class="suggestions">
           <span class="suggestion-label">试试这些：</span>
           <div class="suggestion-tags" id="suggestion-tags"></div>

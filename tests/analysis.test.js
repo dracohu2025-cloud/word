@@ -17,16 +17,19 @@ describe('analysis helpers', () => {
     expect(validateInput('Serendipity')).toEqual({ ok: true })
   })
 
-  test('detects one to four Chinese characters', () => {
-    expect(getInputType('知道')).toBe('chinese')
-    expect(validateInput('知道')).toEqual({ ok: true })
-    expect(validateInput('一二三四')).toEqual({ ok: true })
+  test('detects a single Chinese character', () => {
+    expect(getInputType('道')).toBe('chinese')
+    expect(validateInput('道')).toEqual({ ok: true })
   })
 
-  test('rejects five Chinese characters', () => {
-    expect(validateInput('一二三四五')).toEqual({
+  test('rejects multiple Chinese characters', () => {
+    expect(validateInput('知道')).toEqual({
       ok: false,
-      message: '中文输入需为 1 到 4 个汉字',
+      message: '中文输入仅支持单个汉字',
+    })
+    expect(validateInput('一二三四')).toEqual({
+      ok: false,
+      message: '中文输入仅支持单个汉字',
     })
   })
 
@@ -40,7 +43,7 @@ describe('analysis helpers', () => {
   test('rejects mixed-language input', () => {
     expect(validateInput('道word')).toEqual({
       ok: false,
-      message: '请输入中文词或单个英文单词',
+      message: '请输入单个汉字或单个英文单词',
     })
   })
 
