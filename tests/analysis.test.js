@@ -91,4 +91,19 @@ describe('analysis helpers', () => {
     expect(parsed.epiphanyEn.split(' ')).toHaveLength(18)
     expect(parsed.epiphanyCn.length).toBeLessThanOrEqual(28)
   })
+
+  test('keeps explanation paragraphs on sentence boundaries when trimming', () => {
+    const parsed = parseWordAnalysis(
+      JSON.stringify({
+        word: 'Incubate',
+        explanation: '词源指向拉丁语“incubare”（卧于其上），描绘了以体温温暖和守护的原始画面。这不仅是物理孵化，更隐喻了任何需要时间、耐心与保护才能成长成形的事物。||第二段保持简短。',
+      }),
+      'Incubate',
+      'english',
+    )
+
+    const [firstParagraph] = parsed.explanation.split('||').map(part => part.trim())
+    expect(firstParagraph.endsWith('。') || firstParagraph.endsWith('…')).toBe(true)
+    expect(firstParagraph).not.toMatch(/[，、,:：；;]$/)
+  })
 })

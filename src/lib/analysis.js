@@ -163,13 +163,49 @@ function normalizeFormulaPart(value) {
   return clampText(firstSplit, 8)
 }
 
+function clampExplanationParagraph(value, softLimit = 92, hardLimit = 132) {
+  const normalized = String(value ?? '').replace(/\s+/g, ' ').trim()
+
+  if (normalized.length <= softLimit) {
+    return normalized
+  }
+
+  const sentenceEndPattern = /[。！？.!?]/gu
+  let match
+  let lastBeforeSoft = -1
+  let firstAfterSoft = -1
+
+  while ((match = sentenceEndPattern.exec(normalized)) !== null) {
+    const index = match.index
+    if (index < softLimit) {
+      lastBeforeSoft = index
+      continue
+    }
+
+    if (index <= hardLimit) {
+      firstAfterSoft = index
+      break
+    }
+  }
+
+  if (firstAfterSoft !== -1) {
+    return normalized.slice(0, firstAfterSoft + 1).trim()
+  }
+
+  if (lastBeforeSoft >= Math.floor(softLimit * 0.55)) {
+    return normalized.slice(0, lastBeforeSoft + 1).trim()
+  }
+
+  return `${stripOuterPunctuation(normalized.slice(0, softLimit))}…`
+}
+
 function normalizeExplanation(value) {
   const parts = String(value ?? '')
     .split('||')
-    .map(part => stripOuterPunctuation(part))
+    .map(part => String(part ?? '').trim())
     .filter(Boolean)
     .slice(0, 2)
-    .map(part => clampText(part, 92))
+    .map(part => clampExplanationParagraph(part))
 
   return parts.join(' || ')
 }
