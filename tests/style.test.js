@@ -20,4 +20,9 @@ describe('landing decorative layers', () => {
     expect(styleSource).toContain('align-items: flex-start;')
     expect(styleSource).toContain('align-self: flex-start;')
   })
+
+  test('mono font stack only references open-source fallbacks', () => {
+    expect(styleSource).toContain("--mono: 'Fira Code', monospace;")
+    expect(styleSource).not.toContain('SF Mono')
+  })
 })
