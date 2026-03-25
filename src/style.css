@@ -222,7 +222,6 @@ select {
 }
 
 .newton-scene-readout,
-.newton-console-card,
 .newton-slider-dock {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(8, 13, 20, 0.72);
@@ -249,10 +248,7 @@ select {
 }
 
 .newton-scene-console {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 16px;
-  align-items: end;
+  display: block;
 }
 
 .newton-control {
@@ -272,6 +268,23 @@ select {
   padding: 12px;
   border-radius: 22px;
   align-items: stretch;
+}
+
+.newton-slider-dock-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 4px 0;
+}
+
+.newton-console-caption {
+  margin: 0;
+  max-width: 42ch;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  line-height: 1.7;
 }
 
 .newton-control span,
@@ -294,34 +307,15 @@ select {
   accent-color: var(--accent);
 }
 
-.newton-console-card {
-  pointer-events: auto;
-  display: grid;
-  gap: 14px;
-  padding: 14px;
-  border-radius: 22px;
-}
-
-.newton-console-block {
-  display: grid;
-  gap: 10px;
-}
-
-.newton-console-block > span {
-  color: var(--ink-soft);
-  font-size: 0.92rem;
-}
-
-.newton-console-note {
-  margin: 0;
-  color: var(--ink-soft);
-  line-height: 1.7;
-}
-
-.newton-console-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.newton-reset-button {
+  flex: 0 0 auto;
+  border-radius: 16px;
+  padding: 11px 16px;
+  border-color: rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(135deg, rgba(255, 191, 130, 0.12), rgba(240, 163, 95, 0.04)),
+    rgba(255, 255, 255, 0.02);
+  color: var(--ink);
 }
 
 .newton-push-button {
@@ -402,10 +396,19 @@ select {
   }
 
   .newton-scene-console {
-    grid-template-columns: 1fr;
+    display: block;
   }
 
   .newton-slider-dock {
     grid-template-columns: 1fr;
+  }
+
+  .newton-slider-dock-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .newton-reset-button {
+    width: 100%;
   }
 }

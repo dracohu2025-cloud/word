@@ -94,6 +94,19 @@ export default function NewtonFirstLawPage() {
 
             <div className="newton-scene-console">
               <div className="newton-slider-dock">
+                <div className="newton-slider-dock-header">
+                  <p className="newton-console-caption">
+                    先设定摩擦和初速度，再点击重新开始，让下一次实验按新的参数启动。
+                  </p>
+                  <button
+                    type="button"
+                    className="button-secondary newton-reset-button"
+                    onClick={resetSimulation}
+                  >
+                    重新开始
+                  </button>
+                </div>
+
                 <label className="newton-control">
                   <span>摩擦系数</span>
                   <strong>{controls.friction.toFixed(2)}</strong>
@@ -119,18 +132,6 @@ export default function NewtonFirstLawPage() {
                     onChange={event => updateControl('initialSpeed', Number(event.target.value))}
                   />
                 </label>
-              </div>
-
-              <div className="newton-console-card">
-                <span className="section-tag">运行控制</span>
-                <p className="newton-console-note">
-                  调整滑杆只会影响下一次重新开始；正在进行中的运动不会被强行重置。
-                </p>
-                <div className="newton-console-actions">
-                  <button type="button" className="button-primary" onClick={resetSimulation}>
-                    重新开始
-                  </button>
-                </div>
               </div>
             </div>
 
