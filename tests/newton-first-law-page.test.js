@@ -16,4 +16,14 @@ describe('newton first law page', () => {
     expect(html).toContain('误解纠偏')
     expect(html).toContain('顿悟句')
   })
+
+  test('renders force and playback controls inside the experiment cabin', () => {
+    const html = renderToStaticMarkup(createElement(NewtonFirstLawPage))
+
+    expect(html).toContain('实验控制台')
+    expect(html).toContain('轻推一下')
+    expect(html).toContain('持续推动')
+    expect(html).toContain('重新开始')
+    expect(html).toContain('暂停')
+  })
 })

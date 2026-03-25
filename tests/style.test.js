@@ -11,13 +11,14 @@ describe('newton interactive card styles', () => {
 
   test('reserve a dedicated viewport for the 3d simulation shell', () => {
     expect(styleSource).toContain('.newton-scene-shell')
-    expect(styleSource).toContain('height: 420px;')
+    expect(styleSource).toContain('height: 520px;')
     expect(styleSource).toContain('overflow: hidden;')
   })
 
   test('collapse the page layout for narrower screens', () => {
     expect(styleSource).toContain('@media (max-width: 1024px)')
-    expect(styleSource).toContain('.newton-controls')
+    expect(styleSource).toContain('.newton-scene-console')
+    expect(styleSource).toContain('.newton-slider-dock')
     expect(styleSource).toContain('grid-template-columns: 1fr;')
   })
 

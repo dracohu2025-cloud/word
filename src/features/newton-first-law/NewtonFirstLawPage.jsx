@@ -14,7 +14,7 @@ function formatForceMode(value) {
 }
 
 function formatFocus(value) {
-  if (value === 'distance') return '更关注位移'
+  if (value === 'distance') return '位移轨迹'
   return '速度与受力'
 }
 
@@ -42,6 +42,15 @@ export default function NewtonFirstLawPage() {
   )
 
   const canRenderScene = typeof window !== 'undefined'
+  const forceOptions = [
+    ['none', '无外力'],
+    ['pulse', '轻推一下'],
+    ['continuous', '持续推动'],
+  ]
+  const focusOptions = [
+    ['speed-force', '速度与受力'],
+    ['distance', '位移轨迹'],
+  ]
 
   return (
     <main className="newton-page">
@@ -81,79 +90,107 @@ export default function NewtonFirstLawPage() {
           </div>
         </div>
 
-        {canRenderScene ? (
-          <Suspense fallback={<div className="newton-scene-fallback">实验舱正在启动…</div>}>
-            <NewtonScene
-              controls={controls}
-              paused={paused}
-              runKey={runKey}
-              onMetricsChange={setMetrics}
-            />
-          </Suspense>
-        ) : (
-          <div className="newton-scene-fallback">3D 场景将在浏览器环境中渲染</div>
-        )}
+        <div className="newton-scene-shell">
+          {canRenderScene ? (
+            <Suspense fallback={<div className="newton-scene-fallback">实验舱正在启动…</div>}>
+              <NewtonScene
+                controls={controls}
+                paused={paused}
+                runKey={runKey}
+                onMetricsChange={setMetrics}
+              />
+            </Suspense>
+          ) : (
+            <div className="newton-scene-fallback">3D 场景将在浏览器环境中渲染</div>
+          )}
 
-        <div className="newton-controls">
-          <label className="newton-control">
-            <span>摩擦系数</span>
-            <strong>{controls.friction.toFixed(2)}</strong>
-            <input
-              type="range"
-              min="0"
-              max="0.24"
-              step="0.01"
-              value={controls.friction}
-              onChange={event => updateControl('friction', Number(event.target.value))}
-            />
-          </label>
+          <div className="newton-scene-overlay">
+            <div className="newton-scene-topline">
+              <div className="newton-scene-readout">
+                <span className="section-tag">舱内读数</span>
+                <strong>{metrics.stateLabel}</strong>
+                <small>速度 {metrics.speed.toFixed(2)} · 合外力 {metrics.netForce.toFixed(2)}</small>
+              </div>
+            </div>
 
-          <label className="newton-control">
-            <span>初速度</span>
-            <strong>{controls.initialSpeed.toFixed(1)}</strong>
-            <input
-              type="range"
-              min="0.5"
-              max="8"
-              step="0.1"
-              value={controls.initialSpeed}
-              onChange={event => updateControl('initialSpeed', Number(event.target.value))}
-            />
-          </label>
+            <div className="newton-scene-console">
+              <div className="newton-slider-dock">
+                <label className="newton-control">
+                  <span>摩擦系数</span>
+                  <strong>{controls.friction.toFixed(2)}</strong>
+                  <input
+                    type="range"
+                    min="0"
+                    max="0.24"
+                    step="0.01"
+                    value={controls.friction}
+                    onChange={event => updateControl('friction', Number(event.target.value))}
+                  />
+                </label>
 
-          <label className="newton-control newton-control-select">
-            <span>外力模式</span>
-            <select
-              value={controls.forceMode}
-              onChange={event => updateControl('forceMode', event.target.value)}
-            >
-              <option value="none">无外力</option>
-              <option value="pulse">短推一下</option>
-              <option value="continuous">持续推</option>
-            </select>
-          </label>
+                <label className="newton-control">
+                  <span>初速度</span>
+                  <strong>{controls.initialSpeed.toFixed(1)}</strong>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="8"
+                    step="0.1"
+                    value={controls.initialSpeed}
+                    onChange={event => updateControl('initialSpeed', Number(event.target.value))}
+                  />
+                </label>
 
-          <label className="newton-control newton-control-select">
-            <span>观察重点</span>
-            <select
-              value={controls.focusMode}
-              onChange={event => updateControl('focusMode', event.target.value)}
-            >
-              <option value="speed-force">速度与受力</option>
-              <option value="distance">更关注位移</option>
-            </select>
-          </label>
-        </div>
+                <div className="newton-control newton-control-segmented">
+                  <span>观察重点</span>
+                  <div className="newton-segmented">
+                    {focusOptions.map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={value === controls.focusMode ? 'is-active' : ''}
+                        onClick={() => updateControl('focusMode', value)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-        <div className="newton-actions">
-          <button type="button" className="button-primary" onClick={resetSimulation}>重新开始</button>
-          <button
-            type="button"
-            className="button-secondary"
-            onClick={() => setPaused(current => !current)}
-          >
-            {paused ? '继续' : '暂停'}
-          </button>
+              <div className="newton-console-card">
+                <span className="section-tag">实验控制台</span>
+                <div className="newton-console-block">
+                  <span>推力操作</span>
+                  <div className="newton-segmented newton-segmented-stack">
+                    {forceOptions.map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={value === controls.forceMode ? 'is-active' : ''}
+                        onClick={() => updateControl('forceMode', value)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="newton-console-actions">
+                  <button type="button" className="button-primary" onClick={resetSimulation}>
+                    重新开始
+                  </button>
+                  <button
+                    type="button"
+                    className="button-secondary"
+                    onClick={() => setPaused(current => !current)}
+                  >
+                    {paused ? '继续' : '暂停'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

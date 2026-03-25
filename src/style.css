@@ -180,11 +180,17 @@ select {
 
 .newton-scene-shell,
 .newton-scene-fallback {
-  height: 420px;
+  position: relative;
+  height: 520px;
   border-radius: 28px;
   overflow: hidden;
   border: 1px solid var(--line-strong);
   background: radial-gradient(circle at top, rgba(46, 84, 133, 0.26), transparent 38%), #080d14;
+}
+
+.newton-scene-canvas {
+  position: absolute;
+  inset: 0;
 }
 
 .newton-scene-fallback {
@@ -193,11 +199,53 @@ select {
   color: var(--ink-soft);
 }
 
-.newton-controls {
-  margin-top: 18px;
+.newton-scene-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px;
+  pointer-events: none;
+}
+
+.newton-scene-topline {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.newton-scene-readout,
+.newton-console-card,
+.newton-slider-dock {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(8, 13, 20, 0.72);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.26);
+}
+
+.newton-scene-readout {
+  pointer-events: none;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 6px;
+  min-width: 230px;
+  padding: 14px 16px;
+  border-radius: 18px;
+}
+
+.newton-scene-readout strong {
+  font-size: 1.08rem;
+}
+
+.newton-scene-readout small {
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+}
+
+.newton-scene-console {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 16px;
+  align-items: end;
 }
 
 .newton-control {
@@ -207,6 +255,16 @@ select {
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.04);
+}
+
+.newton-slider-dock {
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px;
+  border-radius: 22px;
+  align-items: stretch;
 }
 
 .newton-control span,
@@ -224,24 +282,64 @@ select {
   font-size: 1rem;
 }
 
+.newton-control-segmented {
+  align-content: start;
+}
+
 .newton-control input[type="range"] {
   width: 100%;
   accent-color: var(--accent);
 }
 
-.newton-control select {
-  width: 100%;
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 12px 14px;
-  color: var(--ink);
-  background: rgba(7, 12, 19, 0.9);
+.newton-segmented {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
-.newton-actions {
+.newton-segmented-stack {
+  grid-template-columns: 1fr;
+}
+
+.newton-segmented button {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: 160ms ease;
+}
+
+.newton-segmented button.is-active {
+  color: #1b140c;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: rgba(255, 255, 255, 0.18);
+  font-weight: 700;
+}
+
+.newton-console-card {
+  pointer-events: auto;
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 22px;
+}
+
+.newton-console-block {
+  display: grid;
+  gap: 10px;
+}
+
+.newton-console-block > span {
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+.newton-console-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .button-primary,
@@ -289,8 +387,7 @@ select {
 
 @media (max-width: 1024px) {
   .newton-hero,
-  .newton-copy-grid,
-  .newton-controls {
+  .newton-copy-grid {
     grid-template-columns: 1fr;
   }
 
@@ -301,6 +398,14 @@ select {
 
   .newton-scene-shell,
   .newton-scene-fallback {
-    height: 360px;
+    height: 620px;
+  }
+
+  .newton-scene-console {
+    grid-template-columns: 1fr;
+  }
+
+  .newton-slider-dock {
+    grid-template-columns: 1fr;
   }
 }
