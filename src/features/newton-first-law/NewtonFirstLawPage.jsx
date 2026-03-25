@@ -1,4 +1,4 @@
-import { Suspense, lazy, useMemo } from 'react'
+import { Suspense, lazy, useEffect, useMemo } from 'react'
 import { useNewtonSimulation } from './useNewtonSimulation.js'
 
 const NewtonScene = lazy(() => import('./scene/NewtonScene.jsx'))
@@ -31,6 +31,11 @@ export default function NewtonFirstLawPage() {
   )
 
   const canRenderScene = typeof window !== 'undefined'
+
+  useEffect(() => {
+    import('../../style.css')
+  }, [])
+
   return (
     <main className="newton-page">
       <section className="newton-hero">
