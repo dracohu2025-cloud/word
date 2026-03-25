@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
+import { getVelocityArrowScale } from '../newtonVelocityArrow.js'
 
 const START_X = -8
 const TRACK_Y = -0.42
@@ -207,7 +208,7 @@ function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
 
     if (arrowRef.current) {
       arrowRef.current.position.set(sim.position + 1.2, 1.18, 0)
-      arrowRef.current.scale.x = Math.max(0.45, Math.min(2.6, Math.abs(sim.velocity) / 1.9))
+      arrowRef.current.scale.x = getVelocityArrowScale(sim.velocity)
       arrowRef.current.visible = Math.abs(sim.velocity) > 0.03
     }
 
