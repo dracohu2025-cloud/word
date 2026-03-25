@@ -3,84 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>词卡 · 一字一世界</title>
-  <meta name="description" content="输入单个汉字或英文单词，深度挖掘其含义，生成精美词卡。" />
+  <title>牛顿第一定律 · 互动概念卡</title>
+  <meta name="description" content="使用 React Three Fiber 与 Rapier 构建的牛顿第一定律互动概念卡样板。" />
+  <link rel="icon" href="data:," />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <div id="app">
-    <!-- Landing / Search View -->
-    <section id="landing" class="view active">
-      <div class="landing-bg">
-        <div class="bg-glyph bg-glyph-1">字</div>
-        <div class="bg-glyph bg-glyph-2">词</div>
-        <div class="bg-glyph bg-glyph-3">意</div>
-      </div>
-      <div class="landing-content">
-        <h1 class="site-title">
-          <span class="title-char">词</span><span class="title-dot">·</span><span class="title-sub">一字一世界</span>
-        </h1>
-        <p class="site-desc">输入单个汉字或英文单词<br/>深度挖掘其灵魂深处的含义</p>
-        <form id="search-form" class="search-box">
-          <input 
-            id="search-input" 
-            type="text" 
-            placeholder="输入单个汉字或英文单词，如「道」或「Serendipity」" 
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <button id="search-btn" type="submit" aria-label="搜索">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </button>
-        </form>
-        <p class="search-rules">中文仅支持单个汉字，英文仅支持单个单词。先解词，再铸卡。</p>
-        <div id="suggestions" class="suggestions">
-          <span class="suggestion-label">试试这些：</span>
-          <div class="suggestion-tags" id="suggestion-tags"></div>
-        </div>
-      </div>
-    </section>
+  <div id="app"></div>
 
-    <!-- Card View -->
-    <section id="card-view" class="view">
-      <nav class="card-nav">
-        <button id="back-btn" class="nav-btn" aria-label="返回">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-          <span>返回</span>
-        </button>
-        <button id="download-btn" class="nav-btn download-btn" aria-label="下载 PNG">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          <span>下载 PNG</span>
-        </button>
-      </nav>
-
-      <div class="card-container">
-        <div id="word-card" class="word-card">
-          <!-- Dynamically filled -->
-        </div>
-      </div>
-
-      <div id="not-found" class="not-found hidden">
-        <div class="not-found-icon">🔍</div>
-        <h2>暂未收录此词</h2>
-        <p>词库还在持续扩充中，试试首页推荐的词汇吧。</p>
-        <button id="go-back-btn" class="go-back-btn">返回首页</button>
-      </div>
-    </section>
-  </div>
-
-  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

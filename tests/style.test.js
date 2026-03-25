@@ -3,22 +3,22 @@ import { describe, expect, test } from 'vitest'
 
 const styleSource = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
 
-describe('landing decorative layers', () => {
-  test('do not intercept pointer events above interactive content', () => {
+describe('newton interactive card styles', () => {
+  test('keep decorative background layers from intercepting input', () => {
     expect(styleSource).toContain('pointer-events: none;')
-    expect(styleSource).toContain('.landing-content > *')
-    expect(styleSource).toContain('.search-box button svg')
+    expect(styleSource).toContain('body::before')
   })
 
-  test('landing layout is only displayed while the landing view is active', () => {
-    expect(styleSource).toContain('#landing.active')
-    expect(styleSource).toContain('display: flex;')
+  test('reserve a dedicated viewport for the 3d simulation shell', () => {
+    expect(styleSource).toContain('.newton-scene-shell')
+    expect(styleSource).toContain('height: 420px;')
+    expect(styleSource).toContain('overflow: hidden;')
   })
 
-  test('word card is not stretched to the full container height', () => {
-    expect(styleSource).toContain('.card-container')
-    expect(styleSource).toContain('align-items: flex-start;')
-    expect(styleSource).toContain('align-self: flex-start;')
+  test('collapse the page layout for narrower screens', () => {
+    expect(styleSource).toContain('@media (max-width: 1024px)')
+    expect(styleSource).toContain('.newton-controls')
+    expect(styleSource).toContain('grid-template-columns: 1fr;')
   })
 
   test('mono font stack only references open-source fallbacks', () => {
