@@ -27,6 +27,6 @@ describe('newton first law page', () => {
     expect(html).not.toContain('运行控制')
     expect(html).toContain('推一下')
     expect(html).toContain('重新开始')
-    expect(html).toContain('先设定摩擦和初速度，再点击重新开始')
+    expect(html).toContain('实验参数')
   })
 })

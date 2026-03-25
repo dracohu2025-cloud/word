@@ -95,9 +95,7 @@ export default function NewtonFirstLawPage() {
             <div className="newton-scene-console">
               <div className="newton-slider-dock">
                 <div className="newton-slider-dock-header">
-                  <p className="newton-console-caption">
-                    先设定摩擦和初速度，再点击重新开始，让下一次实验按新的参数启动。
-                  </p>
+                  <span className="section-tag newton-dock-tag">实验参数</span>
                   <button
                     type="button"
                     className="button-secondary newton-reset-button"
