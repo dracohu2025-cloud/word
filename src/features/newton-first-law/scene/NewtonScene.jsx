@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
+import { getNewtonMotionStateLabel } from '../newtonMotionState.js'
 import { getVelocityArrowScale } from '../newtonVelocityArrow.js'
 
 const START_X = -8
@@ -225,16 +226,12 @@ function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
       })
     }
 
-    let stateLabel = '匀速观察'
-    if (Math.abs(sim.velocity) < 0.04) {
-      stateLabel = '近似静止'
-    } else if (externalForce > 0) {
-      stateLabel = '受到短推'
-    } else if (controls.friction <= 0.005) {
-      stateLabel = '接近惯性运动'
-    } else if (frictionForce !== 0) {
-      stateLabel = '被摩擦减速'
-    }
+    const stateLabel = getNewtonMotionStateLabel({
+      speed: sim.velocity,
+      friction: controls.friction,
+      externalForce,
+      netForce,
+    })
 
     sim.stateLabel = stateLabel
     sim.hasPushed = sim.hasPushed || externalForce > 0
