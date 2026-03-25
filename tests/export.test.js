@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest'
-import { normalizeExportBackgroundColor, prepareExportNode } from '../src/lib/export.js'
+import {
+  getExportScale,
+  normalizeExportBackgroundColor,
+  prepareExportNode,
+  shouldUsePreviewExport,
+} from '../src/lib/export.js'
 
 function createMockNode(className = '') {
   return {
@@ -9,6 +14,34 @@ function createMockNode(className = '') {
 }
 
 describe('export helpers', () => {
+  test('uses preview-based saving for iOS Safari and WeChat browsers', () => {
+    const iosSafari = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
+    const wechat = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.54'
+    const desktopChrome = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'
+
+    expect(shouldUsePreviewExport(iosSafari)).toBe(true)
+    expect(shouldUsePreviewExport(wechat)).toBe(true)
+    expect(shouldUsePreviewExport(desktopChrome)).toBe(false)
+  })
+
+  test('caps export scale on constrained mobile webkit browsers to avoid huge canvases', () => {
+    const iosSafari = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
+
+    expect(getExportScale({
+      userAgent: iosSafari,
+      devicePixelRatio: 3,
+      width: 960,
+      height: 1400,
+    })).toBeLessThan(2)
+
+    expect(getExportScale({
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+      devicePixelRatio: 2,
+      width: 960,
+      height: 1400,
+    })).toBe(2)
+  })
+
   test('falls back to a paper-like solid background when export background would be transparent', () => {
     expect(normalizeExportBackgroundColor('transparent')).toBe('#F5F2ED')
     expect(normalizeExportBackgroundColor('rgba(0, 0, 0, 0)')).toBe('#F5F2ED')

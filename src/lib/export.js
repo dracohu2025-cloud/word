@@ -1,4 +1,46 @@
 const EXPORT_FALLBACK_BACKGROUND = '#F5F2ED'
+const DEFAULT_EXPORT_SCALE = 2
+const MAX_DESKTOP_EXPORT_EDGE = 4096
+const MAX_CONSTRAINED_EXPORT_EDGE = 2300
+
+function normalizeUserAgent(userAgent) {
+  return String(userAgent || '').toLowerCase()
+}
+
+function isWechat(userAgent) {
+  return normalizeUserAgent(userAgent).includes('micromessenger')
+}
+
+function isIosWebKit(userAgent) {
+  const normalized = normalizeUserAgent(userAgent)
+  const isAppleMobile = /(iphone|ipad|ipod)/.test(normalized)
+  const usesWebKit = normalized.includes('applewebkit')
+  const isAlternativeBrowser = /(crios|fxios|edgios|mercury)/.test(normalized)
+
+  return isAppleMobile && usesWebKit && !isAlternativeBrowser
+}
+
+export function shouldUsePreviewExport(userAgent) {
+  return isWechat(userAgent) || isIosWebKit(userAgent)
+}
+
+export function getExportScale({
+  userAgent,
+  devicePixelRatio = 1,
+  width = 1,
+  height = 1,
+} = {}) {
+  const maxEdge = Math.max(width || 1, height || 1, 1)
+  const constrained = shouldUsePreviewExport(userAgent)
+  const edgeLimit = constrained ? MAX_CONSTRAINED_EXPORT_EDGE : MAX_DESKTOP_EXPORT_EDGE
+  const edgeScaleCap = edgeLimit / maxEdge
+  const targetScale = constrained ? 1.6 : DEFAULT_EXPORT_SCALE
+
+  return Math.max(
+    1,
+    Math.min(targetScale, devicePixelRatio || targetScale, edgeScaleCap),
+  )
+}
 
 export function normalizeExportBackgroundColor(backgroundColor, fallback = EXPORT_FALLBACK_BACKGROUND) {
   if (!backgroundColor) {

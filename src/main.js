@@ -1,6 +1,11 @@
 import html2canvas from 'html2canvas'
 import { validateInput } from './lib/analysis.js'
-import { getExportBackgroundColor, prepareExportNode } from './lib/export.js'
+import {
+  getExportBackgroundColor,
+  getExportScale,
+  prepareExportNode,
+  shouldUsePreviewExport,
+} from './lib/export.js'
 import { renderCardMarkup } from './lib/render.js'
 
 // ═══════════════════════════════════════════════
@@ -23,6 +28,7 @@ export function mountWordCardApp(root = document) {
   const wordCard = root.querySelector('#word-card')
   const notFound = root.querySelector('#not-found')
   const suggestionTags = root.querySelector('#suggestion-tags')
+  let exportPreview = null
 
   if (!landing || !cardView || !searchInput || !searchBtn || !wordCard) {
     return () => {}
@@ -85,6 +91,59 @@ export function mountWordCardApp(root = document) {
     toast.textContent = message
     toast.classList.add('show')
     setTimeout(() => toast.classList.remove('show'), duration)
+  }
+
+  function ensureExportPreview() {
+    if (exportPreview) {
+      return exportPreview
+    }
+
+    const overlay = document.createElement('div')
+    overlay.className = 'export-preview'
+    overlay.innerHTML = `
+      <div class="export-preview__backdrop" data-close="true"></div>
+      <div class="export-preview__sheet" role="dialog" aria-modal="true" aria-label="词卡图片预览">
+        <button type="button" class="export-preview__close" aria-label="关闭预览" data-close="true">关闭</button>
+        <div class="export-preview__hint">长按图片即可保存到相册</div>
+        <img class="export-preview__image" alt="词卡 PNG 预览" />
+      </div>
+    `
+
+    const image = overlay.querySelector('.export-preview__image')
+
+    function closePreview() {
+      overlay.classList.remove('show')
+      if (image) {
+        image.removeAttribute('src')
+      }
+    }
+
+    overlay.addEventListener('click', event => {
+      if (event.target?.dataset?.close === 'true') {
+        closePreview()
+      }
+    })
+
+    document.body.appendChild(overlay)
+    exportPreview = {
+      overlay,
+      image,
+      close: closePreview,
+      open(dataUrl) {
+        if (image) {
+          image.src = dataUrl
+        }
+        overlay.classList.add('show')
+      },
+    }
+
+    cleanups.push(() => {
+      exportPreview?.close()
+      overlay.remove()
+      exportPreview = null
+    })
+
+    return exportPreview
   }
 
   function renderCard(data) {
@@ -178,8 +237,16 @@ export function mountWordCardApp(root = document) {
     }
 
     try {
+      const userAgent = navigator.userAgent
+      const exportScale = getExportScale({
+        userAgent,
+        devicePixelRatio: window.devicePixelRatio,
+        width: wordCard.scrollWidth,
+        height: wordCard.scrollHeight,
+      })
+
       const canvas = await html2canvas(wordCard, {
-        scale: 2,
+        scale: exportScale,
         useCORS: true,
         backgroundColor: getExportBackgroundColor(wordCard),
         logging: false,
@@ -192,11 +259,17 @@ export function mountWordCardApp(root = document) {
 
       const link = document.createElement('a')
       const wordText = wordCard.querySelector('.card-word')?.textContent || 'card'
-      link.download = `词卡_${wordText}.png`
-      link.href = canvas.toDataURL('image/png')
-      link.click()
+      const dataUrl = canvas.toDataURL('image/png')
 
-      showToast('词卡已下载 ✓')
+      if (shouldUsePreviewExport(userAgent)) {
+        ensureExportPreview().open(dataUrl)
+        showToast('图片已生成，请长按保存')
+      } else {
+        link.download = `词卡_${wordText}.png`
+        link.href = dataUrl
+        link.click()
+        showToast('词卡已下载 ✓')
+      }
     } catch (err) {
       console.error('Download error:', err)
       showToast('下载失败，请重试')
