@@ -7,6 +7,10 @@ const sceneSource = readFileSync(
 )
 
 describe('newton scene implementation', () => {
+  test('does not route the cart through an unnecessary rapier rigid body', () => {
+    expect(sceneSource).not.toContain('RigidBody')
+  })
+
   test('does not use decorative Float transforms on the physics cart', () => {
     expect(sceneSource).not.toContain('Float')
   })

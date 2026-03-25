@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, PerspectiveCamera } from '@react-three/drei'
-import { Physics, RigidBody } from '@react-three/rapier'
 import * as THREE from 'three'
 
 const START_X = -8
@@ -147,7 +146,7 @@ function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
 
     const body = cartRef.current
     if (body) {
-      body.setNextKinematicTranslation({ x: START_X, y: 0.04, z: 0 })
+      body.position.set(START_X, 0.04, 0)
     }
 
     pulseTimeLeft.current = 0
@@ -198,7 +197,7 @@ function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
     sim.netForce = netForce
     sim.externalForce = externalForce
 
-    body.setNextKinematicTranslation({ x: sim.position, y: 0.04, z: 0 })
+    body.position.set(sim.position, 0.04, 0)
 
     cameraGoal.current.set(sim.position + 5.3, 2.85, 8.4)
     camera.position.x = THREE.MathUtils.damp(camera.position.x, cameraGoal.current.x, 4.2, dt)
@@ -250,36 +249,27 @@ function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
 
   return (
     <>
-      <RigidBody
-        ref={cartRef}
-        type="kinematicPosition"
-        colliders="cuboid"
-        canSleep={false}
-        enabledRotations={[false, false, false]}
-        enabledTranslations={[true, false, false]}
-      >
-        <group>
-          <mesh castShadow position={[0, 0.3, 0]}>
-            <boxGeometry args={[1.8, 0.46, 1.06]} />
-            <meshStandardMaterial color="#d18b52" metalness={0.24} roughness={0.38} />
+      <group ref={cartRef}>
+        <mesh castShadow position={[0, 0.3, 0]}>
+          <boxGeometry args={[1.8, 0.46, 1.06]} />
+          <meshStandardMaterial color="#d18b52" metalness={0.24} roughness={0.38} />
+        </mesh>
+        <mesh castShadow position={[0, 0.62, 0]}>
+          <boxGeometry args={[0.82, 0.26, 0.88]} />
+          <meshStandardMaterial color="#f3c995" metalness={0.1} roughness={0.5} />
+        </mesh>
+        {[
+          [-0.5, -0.02, 0.42],
+          [0.5, -0.02, 0.42],
+          [-0.5, -0.02, -0.42],
+          [0.5, -0.02, -0.42],
+        ].map(([x, y, z]) => (
+          <mesh key={`${x}-${z}`} castShadow position={[x, y, z]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.18, 0.06, 18, 28]} />
+            <meshStandardMaterial color="#0f1319" metalness={0.4} roughness={0.45} />
           </mesh>
-          <mesh castShadow position={[0, 0.62, 0]}>
-            <boxGeometry args={[0.82, 0.26, 0.88]} />
-            <meshStandardMaterial color="#f3c995" metalness={0.1} roughness={0.5} />
-          </mesh>
-          {[
-            [-0.5, -0.02, 0.42],
-            [0.5, -0.02, 0.42],
-            [-0.5, -0.02, -0.42],
-            [0.5, -0.02, -0.42],
-          ].map(([x, y, z]) => (
-            <mesh key={`${x}-${z}`} castShadow position={[x, y, z]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.18, 0.06, 18, 28]} />
-              <meshStandardMaterial color="#0f1319" metalness={0.4} roughness={0.45} />
-            </mesh>
-          ))}
-        </group>
-      </RigidBody>
+        ))}
+      </group>
 
       <group ref={arrowRef}>
         <mesh position={[0.45, 0, 0]}>
@@ -343,16 +333,14 @@ export default function NewtonScene({ controls, pushKey, runKey, onMetricsChange
           shadow-mapSize-height={1024}
         />
 
-        <Physics gravity={[0, 0, 0]}>
-          <InfiniteGuideRail friction={controls.friction} motionRef={motionRef} />
-          <CartRig
-            controls={controls}
-            pushKey={pushKey}
-            runKey={runKey}
-            onMetricsChange={onMetricsChange}
-            motionRef={motionRef}
-          />
-        </Physics>
+        <InfiniteGuideRail friction={controls.friction} motionRef={motionRef} />
+        <CartRig
+          controls={controls}
+          pushKey={pushKey}
+          runKey={runKey}
+          onMetricsChange={onMetricsChange}
+          motionRef={motionRef}
+        />
 
         <ContactShadows position={[0, TRACK_Y - 0.02, 0]} scale={42} blur={2.6} opacity={0.32} />
         <Environment preset="night" />
