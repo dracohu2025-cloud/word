@@ -7,5 +7,15 @@
     "api/analyze.js": {
       "maxDuration": 300
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/newton",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/newton/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

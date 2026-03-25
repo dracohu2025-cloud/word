@@ -25,4 +25,13 @@ describe('vite config', () => {
   test('allows enough execution time for slower LLM models in production', () => {
     expect(vercelConfig.functions['api/analyze.js'].maxDuration).toBeGreaterThanOrEqual(300)
   })
+
+  test('rewrites the newton sub-route back to the SPA entry on Vercel', () => {
+    expect(vercelConfig.rewrites).toEqual(
+      expect.arrayContaining([
+        { source: '/newton', destination: '/index.html' },
+        { source: '/newton/(.*)', destination: '/index.html' },
+      ]),
+    )
+  })
 })
