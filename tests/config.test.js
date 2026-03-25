@@ -23,6 +23,6 @@ describe('vite config', () => {
   })
 
   test('allows enough execution time for slower LLM models in production', () => {
-    expect(vercelConfig.functions['api/analyze.js'].maxDuration).toBeGreaterThanOrEqual(60)
+    expect(vercelConfig.functions['api/analyze.js'].maxDuration).toBeGreaterThanOrEqual(300)
   })
 })
