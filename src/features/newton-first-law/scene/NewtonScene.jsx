@@ -10,10 +10,27 @@ const RAIL_Z = 1.72
 const POST_SPACING = 5.6
 const POST_COUNT = 26
 
-function InfiniteGuideRail({ motionRef }) {
+function InfiniteGuideRail({ friction, motionRef }) {
   const leftPosts = useRef([])
   const rightPosts = useRef([])
   const slots = useMemo(() => Array.from({ length: POST_COUNT }, (_, index) => index), [])
+  const frictionRatio = Math.min(1, friction / 0.24)
+  const surfaceStyle = useMemo(() => {
+    const smoothColor = new THREE.Color('#2d4c68')
+    const roughColor = new THREE.Color('#4a4034')
+    const laneColor = new THREE.Color().lerpColors(smoothColor, roughColor, frictionRatio)
+
+    return {
+      laneColor: laneColor.getStyle(),
+      laneRoughness: 0.2 + frictionRatio * 0.68,
+      laneMetalness: 0.64 - frictionRatio * 0.42,
+      baseColor: new THREE.Color().lerpColors(
+        new THREE.Color('#121d29'),
+        new THREE.Color('#262018'),
+        frictionRatio,
+      ).getStyle(),
+    }
+  }, [frictionRatio])
 
   useFrame(() => {
     const anchorX = motionRef.current.position
@@ -39,12 +56,22 @@ function InfiniteGuideRail({ motionRef }) {
     <group>
       <mesh receiveShadow position={[0, TRACK_Y, 0]}>
         <boxGeometry args={[3600, 0.16, 5.8]} />
-        <meshStandardMaterial color="#111923" metalness={0.1} roughness={0.92} />
+        <meshStandardMaterial
+          color={surfaceStyle.baseColor}
+          metalness={0.08}
+          roughness={0.94}
+        />
       </mesh>
 
       <mesh receiveShadow position={[0, TRACK_Y + 0.03, 0]}>
         <boxGeometry args={[3600, 0.03, 1.38]} />
-        <meshStandardMaterial color="#1f2a37" metalness={0.18} roughness={0.54} />
+        <meshStandardMaterial
+          color={surfaceStyle.laneColor}
+          metalness={surfaceStyle.laneMetalness}
+          roughness={surfaceStyle.laneRoughness}
+          emissive={frictionRatio < 0.1 ? '#17324c' : '#20160d'}
+          emissiveIntensity={frictionRatio < 0.1 ? 0.16 : 0.05}
+        />
       </mesh>
 
       <mesh position={[0, TRACK_Y + 0.1, RAIL_Z]}>
@@ -94,7 +121,7 @@ function InfiniteGuideRail({ motionRef }) {
   )
 }
 
-function CartRig({ controls, paused, pushKey, runKey, onMetricsChange, motionRef }) {
+function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
   const cartRef = useRef(null)
   const arrowRef = useRef(null)
   const thrustRef = useRef(null)
@@ -132,7 +159,7 @@ function CartRig({ controls, paused, pushKey, runKey, onMetricsChange, motionRef
       hasPushed: false,
       stateLabel: '已重置',
     })
-  }, [controls.initialSpeed, motionRef, onMetricsChange, runKey])
+  }, [motionRef, onMetricsChange, runKey])
 
   useFrame((_, delta) => {
     const body = cartRef.current
@@ -145,23 +172,20 @@ function CartRig({ controls, paused, pushKey, runKey, onMetricsChange, motionRef
     const previousVelocity = sim.velocity
 
     let externalForce = 0
-    if (!paused) {
-      if (pulseTimeLeft.current > 0) {
-        externalForce = 7.2
-        pulseTimeLeft.current = Math.max(0, pulseTimeLeft.current - dt)
-      }
+    if (pulseTimeLeft.current > 0) {
+      externalForce = 7.2
+      pulseTimeLeft.current = Math.max(0, pulseTimeLeft.current - dt)
     }
 
     let frictionForce = 0
-    if (!paused && Math.abs(previousVelocity) > 0.0001) {
+    if (Math.abs(previousVelocity) > 0.0001) {
       frictionForce = -Math.sign(previousVelocity) * controls.friction * 5.6
     }
 
-    const netForce = paused ? 0 : externalForce + frictionForce
+    const netForce = externalForce + frictionForce
     let nextVelocity = previousVelocity + netForce * dt
 
     if (
-      !paused &&
       Math.abs(previousVelocity) > 0 &&
       externalForce === 0 &&
       Math.sign(previousVelocity) !== Math.sign(nextVelocity)
@@ -202,9 +226,7 @@ function CartRig({ controls, paused, pushKey, runKey, onMetricsChange, motionRef
     }
 
     let stateLabel = '匀速观察'
-    if (paused) {
-      stateLabel = '已暂停'
-    } else if (Math.abs(sim.velocity) < 0.04) {
+    if (Math.abs(sim.velocity) < 0.04) {
       stateLabel = '近似静止'
     } else if (externalForce > 0) {
       stateLabel = '受到短推'
@@ -296,7 +318,7 @@ function CartRig({ controls, paused, pushKey, runKey, onMetricsChange, motionRef
   )
 }
 
-export default function NewtonScene({ controls, paused, pushKey, runKey, onMetricsChange }) {
+export default function NewtonScene({ controls, pushKey, runKey, onMetricsChange }) {
   const motionRef = useRef({
     position: START_X,
     velocity: controls.initialSpeed,
@@ -322,10 +344,9 @@ export default function NewtonScene({ controls, paused, pushKey, runKey, onMetri
         />
 
         <Physics gravity={[0, 0, 0]}>
-          <InfiniteGuideRail motionRef={motionRef} />
+          <InfiniteGuideRail friction={controls.friction} motionRef={motionRef} />
           <CartRig
             controls={controls}
-            paused={paused}
             pushKey={pushKey}
             runKey={runKey}
             onMetricsChange={onMetricsChange}

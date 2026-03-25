@@ -12,11 +12,9 @@ export default function NewtonFirstLawPage() {
     controls,
     metrics,
     explanation,
-    paused,
     pushKey,
     pushCart,
     runKey,
-    setPaused,
     setMetrics,
     updateControl,
     resetSimulation,
@@ -76,7 +74,6 @@ export default function NewtonFirstLawPage() {
             <Suspense fallback={<div className="newton-scene-fallback">实验舱正在启动…</div>}>
               <NewtonScene
                 controls={controls}
-                paused={paused}
                 pushKey={pushKey}
                 runKey={runKey}
                 onMetricsChange={setMetrics}
@@ -126,17 +123,12 @@ export default function NewtonFirstLawPage() {
 
               <div className="newton-console-card">
                 <span className="section-tag">运行控制</span>
-                <p className="newton-console-note">每次重开时，会读取你刚刚设定的初速度和摩擦系数。</p>
+                <p className="newton-console-note">
+                  调整滑杆只会影响下一次重新开始；正在进行中的运动不会被强行重置。
+                </p>
                 <div className="newton-console-actions">
                   <button type="button" className="button-primary" onClick={resetSimulation}>
                     重新开始
-                  </button>
-                  <button
-                    type="button"
-                    className="button-secondary"
-                    onClick={() => setPaused(current => !current)}
-                  >
-                    {paused ? '继续' : '暂停'}
                   </button>
                 </div>
               </div>

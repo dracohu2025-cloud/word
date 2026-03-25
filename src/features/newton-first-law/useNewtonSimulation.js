@@ -17,7 +17,6 @@ export function useNewtonSimulation() {
   })
   const [runKey, setRunKey] = useState(0)
   const [pushKey, setPushKey] = useState(0)
-  const [paused, setPaused] = useState(false)
 
   const explanation = useMemo(
     () => getNewtonExplanation({
@@ -35,7 +34,6 @@ export function useNewtonSimulation() {
 
   function resetSimulation() {
     setRunKey(key => key + 1)
-    setPaused(false)
     setMetrics({
       speed: controls.initialSpeed,
       netForce: 0,
@@ -53,11 +51,9 @@ export function useNewtonSimulation() {
     controls,
     metrics,
     explanation,
-    paused,
     pushKey,
     runKey,
     pushCart,
-    setPaused,
     setMetrics,
     updateControl,
     resetSimulation,
