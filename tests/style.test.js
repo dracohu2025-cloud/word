@@ -5,8 +5,12 @@ const styleSource = readFileSync(new URL('../src/style.css', import.meta.url), '
 
 describe('newton interactive card styles', () => {
   test('keep decorative background layers from intercepting input', () => {
+    expect(styleSource).toContain('body::before')
+    expect(styleSource).toContain('.newton-scene-canvas')
     expect(styleSource).toContain('pointer-events: none;')
     expect(styleSource).toContain('body::before')
+    expect(styleSource).toContain('.newton-scene-overlay')
+    expect(styleSource).toContain('.newton-scene-canvas {\n  position: absolute;\n  inset: 0;\n  pointer-events: none;')
   })
 
   test('reserve a dedicated viewport for the 3d simulation shell', () => {

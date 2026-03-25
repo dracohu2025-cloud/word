@@ -94,7 +94,7 @@ function InfiniteGuideRail({ motionRef }) {
   )
 }
 
-function CartRig({ controls, paused, runKey, onMetricsChange, motionRef }) {
+function CartRig({ controls, paused, pushKey, runKey, onMetricsChange, motionRef }) {
   const cartRef = useRef(null)
   const arrowRef = useRef(null)
   const thrustRef = useRef(null)
@@ -103,8 +103,10 @@ function CartRig({ controls, paused, runKey, onMetricsChange, motionRef }) {
   const { camera } = useThree()
 
   useEffect(() => {
-    pulseTimeLeft.current = controls.forceMode === 'pulse' ? 0.32 : 0
-  }, [controls.forceMode, runKey])
+    if (pushKey > 0) {
+      pulseTimeLeft.current = 0.22
+    }
+  }, [pushKey])
 
   useEffect(() => {
     const sim = motionRef.current
@@ -113,6 +115,7 @@ function CartRig({ controls, paused, runKey, onMetricsChange, motionRef }) {
     sim.velocity = controls.initialSpeed
     sim.netForce = 0
     sim.externalForce = 0
+    sim.hasPushed = false
     sim.stateLabel = '已重置'
 
     const body = cartRef.current
@@ -120,14 +123,16 @@ function CartRig({ controls, paused, runKey, onMetricsChange, motionRef }) {
       body.setNextKinematicTranslation({ x: START_X, y: 0.04, z: 0 })
     }
 
-    pulseTimeLeft.current = controls.forceMode === 'pulse' ? 0.32 : 0
+    pulseTimeLeft.current = 0
     onMetricsChange({
       speed: Math.abs(sim.velocity),
       netForce: 0,
       position: START_X,
+      isPushing: false,
+      hasPushed: false,
       stateLabel: '已重置',
     })
-  }, [controls.forceMode, controls.initialSpeed, motionRef, onMetricsChange, runKey])
+  }, [controls.initialSpeed, motionRef, onMetricsChange, runKey])
 
   useFrame((_, delta) => {
     const body = cartRef.current
@@ -141,9 +146,7 @@ function CartRig({ controls, paused, runKey, onMetricsChange, motionRef }) {
 
     let externalForce = 0
     if (!paused) {
-      if (controls.forceMode === 'continuous') {
-        externalForce = 2.6
-      } else if (controls.forceMode === 'pulse' && pulseTimeLeft.current > 0) {
+      if (pulseTimeLeft.current > 0) {
         externalForce = 7.2
         pulseTimeLeft.current = Math.max(0, pulseTimeLeft.current - dt)
       }
@@ -204,7 +207,7 @@ function CartRig({ controls, paused, runKey, onMetricsChange, motionRef }) {
     } else if (Math.abs(sim.velocity) < 0.04) {
       stateLabel = '近似静止'
     } else if (externalForce > 0) {
-      stateLabel = controls.forceMode === 'pulse' ? '受到短推' : '受持续外力'
+      stateLabel = '受到短推'
     } else if (controls.friction <= 0.005) {
       stateLabel = '接近惯性运动'
     } else if (frictionForce !== 0) {
@@ -212,10 +215,13 @@ function CartRig({ controls, paused, runKey, onMetricsChange, motionRef }) {
     }
 
     sim.stateLabel = stateLabel
+    sim.hasPushed = sim.hasPushed || externalForce > 0
     onMetricsChange({
       speed: Math.abs(sim.velocity),
       netForce,
       position: sim.position,
+      isPushing: externalForce > 0,
+      hasPushed: sim.hasPushed,
       stateLabel,
     })
   })
@@ -290,12 +296,13 @@ function CartRig({ controls, paused, runKey, onMetricsChange, motionRef }) {
   )
 }
 
-export default function NewtonScene({ controls, paused, runKey, onMetricsChange }) {
+export default function NewtonScene({ controls, paused, pushKey, runKey, onMetricsChange }) {
   const motionRef = useRef({
     position: START_X,
     velocity: controls.initialSpeed,
     netForce: 0,
     externalForce: 0,
+    hasPushed: false,
     stateLabel: '准备中',
   })
 
@@ -319,6 +326,7 @@ export default function NewtonScene({ controls, paused, runKey, onMetricsChange 
           <CartRig
             controls={controls}
             paused={paused}
+            pushKey={pushKey}
             runKey={runKey}
             onMetricsChange={onMetricsChange}
             motionRef={motionRef}

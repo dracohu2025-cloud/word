@@ -181,6 +181,7 @@ select {
 .newton-scene-shell,
 .newton-scene-fallback {
   position: relative;
+  isolation: isolate;
   height: 520px;
   border-radius: 28px;
   overflow: hidden;
@@ -191,6 +192,11 @@ select {
 .newton-scene-canvas {
   position: absolute;
   inset: 0;
+  pointer-events: none;
+}
+
+.newton-scene-canvas canvas {
+  pointer-events: none;
 }
 
 .newton-scene-fallback {
@@ -202,6 +208,7 @@ select {
 .newton-scene-overlay {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -243,7 +250,7 @@ select {
 
 .newton-scene-console {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 310px;
+  grid-template-columns: minmax(0, 1fr) 280px;
   gap: 16px;
   align-items: end;
 }
@@ -260,7 +267,7 @@ select {
 .newton-slider-dock {
   pointer-events: auto;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   padding: 12px;
   border-radius: 22px;
@@ -282,40 +289,9 @@ select {
   font-size: 1rem;
 }
 
-.newton-control-segmented {
-  align-content: start;
-}
-
 .newton-control input[type="range"] {
   width: 100%;
   accent-color: var(--accent);
-}
-
-.newton-segmented {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.newton-segmented-stack {
-  grid-template-columns: 1fr;
-}
-
-.newton-segmented button {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--ink-soft);
-  cursor: pointer;
-  transition: 160ms ease;
-}
-
-.newton-segmented button.is-active {
-  color: #1b140c;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  border-color: rgba(255, 255, 255, 0.18);
-  font-weight: 700;
 }
 
 .newton-console-card {
@@ -336,10 +312,34 @@ select {
   font-size: 0.92rem;
 }
 
+.newton-console-note {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+
 .newton-console-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.newton-push-button {
+  position: absolute;
+  z-index: 5;
+  left: 25%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 11px 16px;
+  background: linear-gradient(135deg, rgba(255, 191, 130, 0.96), rgba(240, 163, 95, 0.96));
+  color: #1d140c;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 14px 30px rgba(240, 163, 95, 0.28);
+  cursor: pointer;
 }
 
 .button-primary,

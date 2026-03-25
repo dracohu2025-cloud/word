@@ -4,8 +4,6 @@ import { getNewtonExplanation } from './newtonExplanation.js'
 const DEFAULT_CONTROLS = {
   friction: 0.08,
   initialSpeed: 4,
-  forceMode: 'none',
-  focusMode: 'speed-force',
 }
 
 export function useNewtonSimulation() {
@@ -13,18 +11,22 @@ export function useNewtonSimulation() {
   const [metrics, setMetrics] = useState({
     speed: DEFAULT_CONTROLS.initialSpeed,
     netForce: 0,
+    isPushing: false,
+    hasPushed: false,
     stateLabel: '准备中',
   })
   const [runKey, setRunKey] = useState(0)
+  const [pushKey, setPushKey] = useState(0)
   const [paused, setPaused] = useState(false)
 
   const explanation = useMemo(
     () => getNewtonExplanation({
       friction: controls.friction,
-      forceMode: controls.forceMode,
       speed: metrics.speed,
+      isPushing: metrics.isPushing,
+      hasPushed: metrics.hasPushed,
     }),
-    [controls.friction, controls.forceMode, metrics.speed],
+    [controls.friction, metrics.hasPushed, metrics.isPushing, metrics.speed],
   )
 
   function updateControl(key, value) {
@@ -37,8 +39,14 @@ export function useNewtonSimulation() {
     setMetrics({
       speed: controls.initialSpeed,
       netForce: 0,
+      isPushing: false,
+      hasPushed: false,
       stateLabel: '重新开始',
     })
+  }
+
+  function pushCart() {
+    setPushKey(key => key + 1)
   }
 
   return {
@@ -46,7 +54,9 @@ export function useNewtonSimulation() {
     metrics,
     explanation,
     paused,
+    pushKey,
     runKey,
+    pushCart,
     setPaused,
     setMetrics,
     updateControl,
