@@ -13,6 +13,15 @@ describe('vite config', () => {
     expect(config.base).toBe('./')
   })
 
+  test('avoids the ports reserved for doocs md-editor', () => {
+    const config = viteConfig({ mode: 'test' })
+
+    expect(config.server.port).toBe(3000)
+    expect(config.preview.port).toBe(4173)
+    expect([config.server.port, config.preview.port]).not.toContain(5173)
+    expect([config.server.port, config.preview.port]).not.toContain(5174)
+  })
+
   test('allows enough execution time for slower LLM models in production', () => {
     expect(vercelConfig.functions['api/analyze.js'].maxDuration).toBeGreaterThanOrEqual(60)
   })

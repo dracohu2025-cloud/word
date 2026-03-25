@@ -2,13 +2,20 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { analyzeWordRequest } from './src/lib/analyze-service.js'
 
+const DEV_PORT = 3000
+const PREVIEW_PORT = 4173
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
     base: './',
     server: {
-      port: 3000,
+      port: DEV_PORT,
+      open: false,
+    },
+    preview: {
+      port: PREVIEW_PORT,
       open: false,
     },
     define: {
@@ -34,7 +41,7 @@ export default defineConfig(({ mode }) => {
                 const result = await analyzeWordRequest({
                   word,
                   env,
-                  referer: 'http://localhost:3000',
+                  referer: `http://localhost:${DEV_PORT}`,
                   title: 'WordCard',
                 })
                 res.setHeader('Content-Type', 'application/json')
