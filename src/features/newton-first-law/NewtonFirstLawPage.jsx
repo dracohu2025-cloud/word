@@ -94,17 +94,6 @@ export default function NewtonFirstLawPage() {
 
             <div className="newton-scene-console">
               <div className="newton-slider-dock">
-                <div className="newton-slider-dock-header">
-                  <span className="section-tag newton-dock-tag">实验参数</span>
-                  <button
-                    type="button"
-                    className="button-secondary newton-reset-button"
-                    onClick={resetSimulation}
-                  >
-                    重新开始
-                  </button>
-                </div>
-
                 <label className="newton-control">
                   <span>摩擦系数</span>
                   <strong>{controls.friction.toFixed(2)}</strong>
@@ -130,6 +119,16 @@ export default function NewtonFirstLawPage() {
                     onChange={event => updateControl('initialSpeed', Number(event.target.value))}
                   />
                 </label>
+
+                <div className="newton-reset-slot">
+                  <button
+                    type="button"
+                    className="button-secondary newton-reset-button"
+                    onClick={resetSimulation}
+                  >
+                    重新开始
+                  </button>
+                </div>
               </div>
             </div>
 
