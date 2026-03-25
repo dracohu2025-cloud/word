@@ -7,6 +7,10 @@ export function getNewtonMotionStateLabel({
   const speedMagnitude = Math.abs(speed)
   const netForceMagnitude = Math.abs(netForce)
 
+  if (speedMagnitude <= 0.0001 && netForceMagnitude <= 0.0001 && externalForce <= 0.0001) {
+    return '静止'
+  }
+
   if (speedMagnitude < 0.04) {
     return '近似静止'
   }
