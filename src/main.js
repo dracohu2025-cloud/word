@@ -1,6 +1,6 @@
 import html2canvas from 'html2canvas'
 import { validateInput } from './lib/analysis.js'
-import { prepareExportNode } from './lib/export.js'
+import { getExportBackgroundColor, prepareExportNode } from './lib/export.js'
 import { renderCardMarkup } from './lib/render.js'
 
 // ═══════════════════════════════════════════════
@@ -181,7 +181,7 @@ export function mountWordCardApp(root = document) {
       const canvas = await html2canvas(wordCard, {
         scale: 2,
         useCORS: true,
-        backgroundColor: null,
+        backgroundColor: getExportBackgroundColor(wordCard),
         logging: false,
         width: wordCard.scrollWidth,
         height: wordCard.scrollHeight,
