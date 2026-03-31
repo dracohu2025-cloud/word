@@ -128,7 +128,7 @@ export default function NewtonSecondLawPage() {
                   <input
                     type="range"
                     min="0"
-                    max="0.24"
+                    max="0.7"
                     step="0.01"
                     value={controls.friction}
                     onChange={event => updateControl('friction', Number(event.target.value))}

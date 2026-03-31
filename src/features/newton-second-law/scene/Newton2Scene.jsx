@@ -15,7 +15,7 @@ function InfiniteGuideRail({ friction, motionRef }) {
   const leftPosts = useRef([])
   const rightPosts = useRef([])
   const slots = useMemo(() => Array.from({ length: POST_COUNT }, (_, index) => index), [])
-  const frictionRatio = Math.min(1, friction / 0.24)
+  const frictionRatio = Math.min(1, friction / 0.7)
   const surfaceStyle = useMemo(() => {
     const smoothColor = new THREE.Color('#2d4c68')
     const roughColor = new THREE.Color('#4a4034')
