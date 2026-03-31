@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
-import NewtonFirstLawPage from '../features/newton-first-law/NewtonFirstLawPage.jsx'
-import NewtonSecondLawPage from '../features/newton-second-law/NewtonSecondLawPage.jsx'
+import NewtonPage from './NewtonPage.jsx'
 import LegacyWordCardPage from './LegacyWordCardPage.jsx'
 
 const WORD_CARD_META = {
@@ -9,13 +8,8 @@ const WORD_CARD_META = {
 }
 
 const NEWTON_META = {
-  title: '牛顿第一定律 · 互动概念卡',
-  description: '使用 React Three Fiber 与 Rapier 构建的牛顿第一定律互动概念卡样板。',
-}
-
-const NEWTON2_META = {
-  title: '牛顿第二定律 · 互动概念卡',
-  description: '使用 React Three Fiber 构建的牛顿第二定律 F=ma 互动概念卡。',
+  title: '牛顿定律 · 互动概念卡',
+  description: '使用 React Three Fiber 构建的牛顿定律互动概念卡。',
 }
 
 function applyDocumentMeta({ title, description }) {
@@ -31,16 +25,13 @@ function applyDocumentMeta({ title, description }) {
 }
 
 export default function App({ pathname = typeof window !== 'undefined' ? window.location.pathname : '/' }) {
-  const isNewton1Route = pathname === '/newton' || pathname.startsWith('/newton/')
-  const isNewton2Route = pathname === '/newton-2' || pathname.startsWith('/newton-2/')
+  const isNewtonRoute = pathname === '/newton' || pathname === '/newton-2' || pathname.startsWith('/newton/') || pathname.startsWith('/newton-2/')
 
   useEffect(() => {
-    if (isNewton2Route) applyDocumentMeta(NEWTON2_META)
-    else if (isNewton1Route) applyDocumentMeta(NEWTON_META)
+    if (isNewtonRoute) applyDocumentMeta(NEWTON_META)
     else applyDocumentMeta(WORD_CARD_META)
-  }, [isNewton1Route, isNewton2Route])
+  }, [isNewtonRoute])
 
-  if (isNewton2Route) return <NewtonSecondLawPage />
-  if (isNewton1Route) return <NewtonFirstLawPage />
+  if (isNewtonRoute) return <NewtonPage />
   return <LegacyWordCardPage />
 }
