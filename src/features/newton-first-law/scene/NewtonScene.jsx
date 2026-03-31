@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { ContactShadows, Environment, PerspectiveCamera } from '@react-three/drei'
+import { ContactShadows, Environment, PerspectiveCamera, Html } from '@react-three/drei'
 import * as THREE from 'three'
 import { getNewtonMotionStateLabel } from '../newtonMotionState.js'
 import { getVelocityArrowScale } from '../newtonVelocityArrow.js'
@@ -127,6 +127,8 @@ function CartRig({ controls, runKey, onMetricsChange, motionRef }) {
   const cartRef = useRef(null)
   const arrowRef = useRef(null)
   const forceArrowRef = useRef(null)
+  const velocityLabelRef = useRef(null)
+  const forceLabelRef = useRef(null)
   const cameraGoal = useRef(new THREE.Vector3(4.8, 2.85, 8.4))
   const { camera } = useThree()
 
@@ -215,6 +217,17 @@ function CartRig({ controls, runKey, onMetricsChange, motionRef }) {
       }
     }
 
+    if (velocityLabelRef.current) {
+      const v = Math.abs(sim.velocity)
+      velocityLabelRef.current.textContent = `${v.toFixed(2)} m/s`
+      velocityLabelRef.current.style.display = v > 0.03 ? '' : 'none'
+    }
+
+    if (forceLabelRef.current) {
+      forceLabelRef.current.textContent = `${appliedForce.toFixed(1)} N`
+      forceLabelRef.current.style.display = appliedForce > 0.1 ? '' : 'none'
+    }
+
     const stateLabel = getNewtonMotionStateLabel({
       speed: sim.velocity,
       friction: controls.friction,
@@ -266,6 +279,9 @@ function CartRig({ controls, runKey, onMetricsChange, motionRef }) {
           <coneGeometry args={[0.18, 0.36, 20]} />
           <meshStandardMaterial color="#58a6ff" emissive="#2c62aa" emissiveIntensity={0.58} />
         </mesh>
+        <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
+          <div ref={velocityLabelRef} className="arrow-label arrow-label-velocity">0.00 m/s</div>
+        </Html>
       </group>
 
       <group ref={forceArrowRef}>
@@ -277,6 +293,9 @@ function CartRig({ controls, runKey, onMetricsChange, motionRef }) {
           <coneGeometry args={[0.18, 0.36, 20]} />
           <meshStandardMaterial color="#4ade80" emissive="#1a8a4a" emissiveIntensity={0.58} />
         </mesh>
+        <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
+          <div ref={forceLabelRef} className="arrow-label arrow-label-force">0.0 N</div>
+        </Html>
       </group>
     </>
   )

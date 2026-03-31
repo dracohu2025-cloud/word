@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { ContactShadows, Environment, PerspectiveCamera } from '@react-three/drei'
+import { ContactShadows, Environment, PerspectiveCamera, Html } from '@react-three/drei'
 import * as THREE from 'three'
 import { getNewton2MotionStateLabel } from '../newton2MotionState.js'
 import { getVelocityArrowScale, getForceArrowScale } from '../newton2ArrowUtils.js'
@@ -126,6 +126,8 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
   const cartRef = useRef(null)
   const velocityArrowRef = useRef(null)
   const forceArrowRef = useRef(null)
+  const velocityLabelRef = useRef(null)
+  const forceLabelRef = useRef(null)
   const cameraGoal = useRef(new THREE.Vector3(4.8, 2.85, 8.4))
   const { camera } = useThree()
 
@@ -232,6 +234,17 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
         forceArrowRef.current.position.set(sim.position - 0.6 * scaleFactor, 1.05, 0)
         forceArrowRef.current.scale.x = getForceArrowScale(appliedForce)
       }
+    }
+
+    if (velocityLabelRef.current) {
+      const v = Math.abs(sim.velocity)
+      velocityLabelRef.current.textContent = `${v.toFixed(2)} m/s`
+      velocityLabelRef.current.style.display = v > 0.03 ? '' : 'none'
+    }
+
+    if (forceLabelRef.current) {
+      forceLabelRef.current.textContent = `${appliedForce.toFixed(1)} N`
+      forceLabelRef.current.style.display = appliedForce > 0.1 ? '' : 'none'
     }
 
     const stateLabel = getNewton2MotionStateLabel({
