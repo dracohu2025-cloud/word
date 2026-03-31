@@ -16,6 +16,14 @@
     {
       "source": "/newton/(.*)",
       "destination": "/index.html"
+    },
+    {
+      "source": "/newton-2",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/newton-2/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

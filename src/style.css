@@ -408,3 +408,13 @@ select {
     padding: 2px 0 0;
   }
 }
+
+.newton-slider-dock-3 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+
+@media (max-width: 1024px) {
+  .newton-slider-dock-3 {
+    grid-template-columns: 1fr;
+  }
+}
