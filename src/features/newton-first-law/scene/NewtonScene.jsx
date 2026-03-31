@@ -4,6 +4,7 @@ import { ContactShadows, Environment, PerspectiveCamera } from '@react-three/dre
 import * as THREE from 'three'
 import { getNewtonMotionStateLabel } from '../newtonMotionState.js'
 import { getVelocityArrowScale } from '../newtonVelocityArrow.js'
+import { getForceArrowScale } from '../../newton-second-law/newton2ArrowUtils.js'
 
 const START_X = -8
 const TRACK_Y = -0.42
@@ -15,7 +16,7 @@ function InfiniteGuideRail({ friction, motionRef }) {
   const leftPosts = useRef([])
   const rightPosts = useRef([])
   const slots = useMemo(() => Array.from({ length: POST_COUNT }, (_, index) => index), [])
-  const frictionRatio = Math.min(1, friction / 0.24)
+  const frictionRatio = Math.min(1, friction / 0.7)
   const surfaceStyle = useMemo(() => {
     const smoothColor = new THREE.Color('#2d4c68')
     const roughColor = new THREE.Color('#4a4034')
@@ -122,19 +123,12 @@ function InfiniteGuideRail({ friction, motionRef }) {
   )
 }
 
-function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
+function CartRig({ controls, runKey, onMetricsChange, motionRef }) {
   const cartRef = useRef(null)
   const arrowRef = useRef(null)
-  const thrustRef = useRef(null)
+  const forceArrowRef = useRef(null)
   const cameraGoal = useRef(new THREE.Vector3(4.8, 2.85, 8.4))
-  const pulseTimeLeft = useRef(0)
   const { camera } = useThree()
-
-  useEffect(() => {
-    if (pushKey > 0) {
-      pulseTimeLeft.current = 0.22
-    }
-  }, [pushKey])
 
   useEffect(() => {
     const sim = motionRef.current
@@ -143,7 +137,6 @@ function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
     sim.velocity = controls.initialSpeed
     sim.netForce = 0
     sim.externalForce = 0
-    sim.hasPushed = false
     sim.stateLabel = '已重置'
 
     const body = cartRef.current
@@ -151,7 +144,6 @@ function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
       body.position.set(START_X, 0.04, 0)
     }
 
-    pulseTimeLeft.current = 0
     onMetricsChange({
       speed: Math.abs(sim.velocity),
       netForce: 0,
@@ -172,23 +164,24 @@ function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
     const sim = motionRef.current
     const previousVelocity = sim.velocity
 
-    let externalForce = 0
-    if (pulseTimeLeft.current > 0) {
-      externalForce = 7.2
-      pulseTimeLeft.current = Math.max(0, pulseTimeLeft.current - dt)
-    }
+    const appliedForce = controls.appliedForce
 
     let frictionForce = 0
     if (Math.abs(previousVelocity) > 0.0001) {
       frictionForce = -Math.sign(previousVelocity) * controls.friction * 5.6
+    } else if (appliedForce > 0) {
+      const staticFrictionThreshold = controls.friction * 4.0
+      if (appliedForce <= staticFrictionThreshold) {
+        frictionForce = -appliedForce
+      }
     }
 
-    const netForce = externalForce + frictionForce
+    const netForce = appliedForce + frictionForce
     let nextVelocity = previousVelocity + netForce * dt
 
     if (
       Math.abs(previousVelocity) > 0 &&
-      externalForce === 0 &&
+      appliedForce === 0 &&
       Math.sign(previousVelocity) !== Math.sign(nextVelocity)
     ) {
       nextVelocity = 0
@@ -197,7 +190,7 @@ function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
     sim.velocity = nextVelocity
     sim.position += nextVelocity * dt
     sim.netForce = netForce
-    sim.externalForce = externalForce
+    sim.externalForce = appliedForce
 
     body.position.set(sim.position, 0.04, 0)
 
@@ -213,34 +206,29 @@ function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
       arrowRef.current.visible = Math.abs(sim.velocity) > 0.03
     }
 
-    if (thrustRef.current) {
-      const thrustStrength = externalForce > 0 ? Math.min(1, externalForce / 7.2) : 0
-      thrustRef.current.position.set(sim.position - 1.08, 0.3, 0)
-      thrustRef.current.scale.set(0.55 + thrustStrength * 1.25, 0.55 + thrustStrength * 0.4, 0.55)
-      thrustRef.current.visible = thrustStrength > 0.01
-
-      thrustRef.current.children.forEach(node => {
-        if (node.material) {
-          node.material.opacity = 0.14 + thrustStrength * 0.58
-        }
-      })
+    if (forceArrowRef.current) {
+      const showForce = appliedForce > 0.1
+      forceArrowRef.current.visible = showForce
+      if (showForce) {
+        forceArrowRef.current.position.set(sim.position - 0.6, 1.05, 0)
+        forceArrowRef.current.scale.x = getForceArrowScale(appliedForce)
+      }
     }
 
     const stateLabel = getNewtonMotionStateLabel({
       speed: sim.velocity,
       friction: controls.friction,
-      externalForce,
+      externalForce: appliedForce,
       netForce,
     })
 
     sim.stateLabel = stateLabel
-    sim.hasPushed = sim.hasPushed || externalForce > 0
     onMetricsChange({
       speed: Math.abs(sim.velocity),
       netForce,
       position: sim.position,
-      isPushing: externalForce > 0,
-      hasPushed: sim.hasPushed,
+      isPushing: appliedForce > 0,
+      hasPushed: appliedForce > 0,
       stateLabel,
     })
   })
@@ -280,39 +268,26 @@ function CartRig({ controls, pushKey, runKey, onMetricsChange, motionRef }) {
         </mesh>
       </group>
 
-      <group ref={thrustRef}>
-        <mesh rotation={[0, 0, Math.PI / 2]}>
-          <coneGeometry args={[0.34, 1.38, 18]} />
-          <meshStandardMaterial
-            color="#ffbf82"
-            emissive="#ff9f43"
-            emissiveIntensity={1.2}
-            transparent
-            opacity={0.22}
-          />
+      <group ref={forceArrowRef}>
+        <mesh position={[0.45, 0, 0]}>
+          <boxGeometry args={[0.92, 0.07, 0.07]} />
+          <meshStandardMaterial color="#4ade80" emissive="#1a8a4a" emissiveIntensity={0.58} />
         </mesh>
-        <mesh position={[-0.16, 0, 0]}>
-          <sphereGeometry args={[0.2, 18, 18]} />
-          <meshStandardMaterial
-            color="#fff0cf"
-            emissive="#ffc26a"
-            emissiveIntensity={1.35}
-            transparent
-            opacity={0.36}
-          />
+        <mesh position={[1, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+          <coneGeometry args={[0.18, 0.36, 20]} />
+          <meshStandardMaterial color="#4ade80" emissive="#1a8a4a" emissiveIntensity={0.58} />
         </mesh>
       </group>
     </>
   )
 }
 
-export default function NewtonScene({ controls, pushKey, runKey, onMetricsChange }) {
+export default function NewtonScene({ controls, runKey, onMetricsChange }) {
   const motionRef = useRef({
     position: START_X,
     velocity: controls.initialSpeed,
     netForce: 0,
     externalForce: 0,
-    hasPushed: false,
     stateLabel: '准备中',
   })
 
@@ -334,7 +309,6 @@ export default function NewtonScene({ controls, pushKey, runKey, onMetricsChange
         <InfiniteGuideRail friction={controls.friction} motionRef={motionRef} />
         <CartRig
           controls={controls}
-          pushKey={pushKey}
           runKey={runKey}
           onMetricsChange={onMetricsChange}
           motionRef={motionRef}

@@ -1,19 +1,17 @@
 import { Suspense, lazy, useEffect, useMemo } from 'react'
 import { useNewtonSimulation } from './useNewtonSimulation.js'
 
-const NewtonScene = lazy(() => import('./scene/NewtonScene.jsx'))
+import NewtonScene from './scene/NewtonScene.jsx'
 
 const FORMAL_DEFINITION = '当合外力为零时，物体保持静止状态或匀速直线运动状态。'
-const MISCONCEPTION = '“东西总会慢下来”是日常经验，不是定律本身；真正的原因是现实里通常有摩擦和阻力。'
-const EPIPHANY = '第一定律谈的不是“会不会动”，而是“改变运动为什么需要原因”。'
+const MISCONCEPTION = '"东西总会慢下来"是日常经验，不是定律本身；真正的原因是现实里通常有摩擦和阻力。'
+const EPIPHANY = '第一定律谈的不是"会不会动"，而是"改变运动为什么需要原因"。'
 
 export default function NewtonFirstLawPage() {
   const {
     controls,
     metrics,
     explanation,
-    pushKey,
-    pushCart,
     runKey,
     setMetrics,
     updateControl,
@@ -23,11 +21,11 @@ export default function NewtonFirstLawPage() {
   const hud = useMemo(
     () => [
       ['速度', metrics.speed.toFixed(2)],
-      ['合外力', metrics.netForce.toFixed(2)],
-      ['状态', metrics.stateLabel],
+      ['合力', metrics.netForce.toFixed(2)],
+      ['施力', controls.appliedForce.toFixed(1)],
       ['摩擦', controls.friction.toFixed(2)],
     ],
-    [controls.friction, metrics.netForce, metrics.speed, metrics.stateLabel],
+    [controls.appliedForce, controls.friction, metrics.netForce, metrics.speed],
   )
 
   const canRenderScene = typeof window !== 'undefined'
@@ -44,7 +42,7 @@ export default function NewtonFirstLawPage() {
           <h1>牛顿第一定律</h1>
           <p className="newton-subtitle">
             一张会动的概念卡。你拖动变量，不是为了看一个小游戏，而是为了亲眼看出：
-            “停下”通常不是定律本身，而是摩擦在改变运动。
+            "停下"通常不是定律本身，而是摩擦在改变运动。
           </p>
         </div>
         <div className="newton-status-grid">
@@ -69,8 +67,8 @@ export default function NewtonFirstLawPage() {
             <h2>轨道小车实验舱</h2>
           </div>
           <div className="newton-stage-summary">
-            <span>先设定参数，再开始实验</span>
-            <span>需要外力时，直接推一下小车</span>
+            <span>调节力、摩擦和初速度</span>
+            <span>观察运动状态如何变化</span>
           </div>
         </div>
 
@@ -79,7 +77,6 @@ export default function NewtonFirstLawPage() {
             <Suspense fallback={<div className="newton-scene-fallback">实验舱正在启动…</div>}>
               <NewtonScene
                 controls={controls}
-                pushKey={pushKey}
                 runKey={runKey}
                 onMetricsChange={setMetrics}
               />
@@ -93,19 +90,32 @@ export default function NewtonFirstLawPage() {
               <div className="newton-scene-readout">
                 <span className="section-tag">舱内读数</span>
                 <strong>{metrics.stateLabel}</strong>
-                <small>速度 {metrics.speed.toFixed(2)} · 合外力 {metrics.netForce.toFixed(2)}</small>
+                <small>速度 {metrics.speed.toFixed(2)} · 合力 {metrics.netForce.toFixed(2)}</small>
               </div>
             </div>
 
             <div className="newton-scene-console">
-              <div className="newton-slider-dock">
+              <div className="newton-slider-dock newton-slider-dock-3">
+                <label className="newton-control">
+                  <span>施加力 (N)</span>
+                  <strong>{controls.appliedForce.toFixed(1)}</strong>
+                  <input
+                    type="range"
+                    min="0"
+                    max="20"
+                    step="0.5"
+                    value={controls.appliedForce}
+                    onChange={event => updateControl('appliedForce', Number(event.target.value))}
+                  />
+                </label>
+
                 <label className="newton-control">
                   <span>摩擦系数</span>
                   <strong>{controls.friction.toFixed(2)}</strong>
                   <input
                     type="range"
                     min="0"
-                    max="0.24"
+                    max="0.7"
                     step="0.01"
                     value={controls.friction}
                     onChange={event => updateControl('friction', Number(event.target.value))}
@@ -117,7 +127,7 @@ export default function NewtonFirstLawPage() {
                   <strong>{controls.initialSpeed.toFixed(1)}</strong>
                   <input
                     type="range"
-                    min="0.5"
+                    min="0"
                     max="8"
                     step="0.1"
                     value={controls.initialSpeed}
@@ -136,14 +146,6 @@ export default function NewtonFirstLawPage() {
                 </div>
               </div>
             </div>
-
-            <button
-              type="button"
-              className="newton-push-button"
-              onClick={pushCart}
-            >
-              推一下
-            </button>
           </div>
         </div>
       </section>

@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react'
 import { getNewtonExplanation } from './newtonExplanation.js'
 
 const DEFAULT_CONTROLS = {
-  friction: 0.08,
+  appliedForce: 0,
   initialSpeed: 4,
+  friction: 0,
 }
 
 export function useNewtonSimulation() {
@@ -11,21 +12,18 @@ export function useNewtonSimulation() {
   const [metrics, setMetrics] = useState({
     speed: DEFAULT_CONTROLS.initialSpeed,
     netForce: 0,
-    isPushing: false,
-    hasPushed: false,
+    appliedForce: 0,
     stateLabel: '准备中',
   })
   const [runKey, setRunKey] = useState(0)
-  const [pushKey, setPushKey] = useState(0)
 
   const explanation = useMemo(
     () => getNewtonExplanation({
       friction: controls.friction,
       speed: metrics.speed,
-      isPushing: metrics.isPushing,
-      hasPushed: metrics.hasPushed,
+      appliedForce: controls.appliedForce,
     }),
-    [controls.friction, metrics.hasPushed, metrics.isPushing, metrics.speed],
+    [controls.friction, controls.appliedForce, metrics.speed, metrics.appliedForce],
   )
 
   function updateControl(key, value) {
@@ -33,27 +31,20 @@ export function useNewtonSimulation() {
   }
 
   function resetSimulation() {
-    setRunKey(key => key + 1)
+    setRunKey(key => key + 11)
     setMetrics({
       speed: controls.initialSpeed,
       netForce: 0,
-      isPushing: false,
-      hasPushed: false,
-      stateLabel: '重新开始',
+      appliedForce: controls.appliedForce,
+      stateLabel: '已重置',
     })
-  }
-
-  function pushCart() {
-    setPushKey(key => key + 1)
   }
 
   return {
     controls,
     metrics,
     explanation,
-    pushKey,
     runKey,
-    pushCart,
     setMetrics,
     updateControl,
     resetSimulation,
