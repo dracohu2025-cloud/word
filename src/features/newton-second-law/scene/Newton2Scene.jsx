@@ -126,8 +126,10 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
   const cartRef = useRef(null)
   const velocityArrowRef = useRef(null)
   const forceArrowRef = useRef(null)
+  const frictionArrowRef = useRef(null)
   const velocityLabelRef = useRef(null)
   const forceLabelRef = useRef(null)
+  const frictionLabelRef = useRef(null)
   const cameraGoal = useRef(new THREE.Vector3(4.8, 2.85, 8.4))
   const { camera } = useThree()
 
@@ -236,6 +238,16 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
       }
     }
 
+    if (frictionArrowRef.current) {
+      const frictionMag = Math.abs(frictionForce)
+      const showFriction = frictionMag > 0.05
+      frictionArrowRef.current.visible = showFriction
+      if (showFriction) {
+        frictionArrowRef.current.position.set(sim.position + 1.2 * scaleFactor, 0.75, 0)
+        frictionArrowRef.current.scale.x = -getForceArrowScale(frictionMag)
+      }
+    }
+
     if (velocityLabelRef.current) {
       const v = Math.abs(sim.velocity)
       velocityLabelRef.current.textContent = `${v.toFixed(2)} m/s`
@@ -245,6 +257,12 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
     if (forceLabelRef.current) {
       forceLabelRef.current.textContent = `${appliedForce.toFixed(1)} N`
       forceLabelRef.current.style.display = appliedForce > 0.1 ? '' : 'none'
+    }
+
+    if (frictionLabelRef.current) {
+      const frictionMag = Math.abs(frictionForce)
+      frictionLabelRef.current.textContent = `${frictionMag.toFixed(1)} N`
+      frictionLabelRef.current.style.display = frictionMag > 0.05 ? '' : 'none'
     }
 
     const stateLabel = getNewton2MotionStateLabel({
@@ -321,6 +339,20 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
         </mesh>
         <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
           <div ref={forceLabelRef} className="arrow-label arrow-label-force">0.0 N</div>
+        </Html>
+      </group>
+
+      <group ref={frictionArrowRef}>
+        <mesh position={[0.45, 0, 0]}>
+          <boxGeometry args={[0.92, 0.07, 0.07]} />
+          <meshStandardMaterial color="#ff8b73" emissive="#8a3a2a" emissiveIntensity={0.58} />
+        </mesh>
+        <mesh position={[1, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+          <coneGeometry args={[0.18, 0.36, 20]} />
+          <meshStandardMaterial color="#ff8b73" emissive="#8a3a2a" emissiveIntensity={0.58} />
+        </mesh>
+        <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
+          <div ref={frictionLabelRef} className="arrow-label arrow-label-friction">0.0 N</div>
         </Html>
       </group>
     </>

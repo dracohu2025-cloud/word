@@ -475,6 +475,11 @@ select {
   background: rgba(8, 13, 20, 0.72);
 }
 
+.arrow-label-friction {
+  color: #ff8b73;
+  background: rgba(8, 13, 20, 0.72);
+}
+
 @media (max-width: 1024px) {
   .newton-slider-dock-3 {
     grid-template-columns: 1fr;
