@@ -299,6 +299,9 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
           <coneGeometry args={[0.18, 0.36, 20]} />
           <meshStandardMaterial color="#58a6ff" emissive="#2c62aa" emissiveIntensity={0.58} />
         </mesh>
+        <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
+          <div ref={velocityLabelRef} className="arrow-label arrow-label-velocity">0.00 m/s</div>
+        </Html>
       </group>
 
       <group ref={forceArrowRef}>
@@ -310,6 +313,9 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
           <coneGeometry args={[0.18, 0.36, 20]} />
           <meshStandardMaterial color="#4ade80" emissive="#1a8a4a" emissiveIntensity={0.58} />
         </mesh>
+        <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
+          <div ref={forceLabelRef} className="arrow-label arrow-label-force">0.0 N</div>
+        </Html>
       </group>
     </>
   )
