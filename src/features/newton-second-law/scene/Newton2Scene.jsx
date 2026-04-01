@@ -243,7 +243,7 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
       const showFriction = frictionMag > 0.05
       frictionArrowRef.current.visible = showFriction
       if (showFriction) {
-        frictionArrowRef.current.position.set(sim.position - 0.6 * scaleFactor, 0.04, 0)
+        frictionArrowRef.current.position.set(sim.position - 1.1 * scaleFactor, 0.04, 0)
         frictionArrowRef.current.scale.x = -getForceArrowScale(frictionMag)
       }
     }
