@@ -225,7 +225,8 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
 
     if (velocityArrowRef.current) {
       velocityArrowRef.current.position.set(sim.position + 1.2 * scaleFactor, 1.18, 0)
-      velocityArrowRef.current.scale.x = getVelocityArrowScale(sim.velocity)
+      const vScale = getVelocityArrowScale(sim.velocity)
+      velocityArrowRef.current.scale.set(vScale, Math.max(0.5, vScale), Math.max(0.5, vScale))
       velocityArrowRef.current.visible = Math.abs(sim.velocity) > 0.03
     }
 
@@ -234,7 +235,8 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
       forceArrowRef.current.visible = showForce
       if (showForce) {
         forceArrowRef.current.position.set(sim.position - 0.6 * scaleFactor, 1.05, 0)
-        forceArrowRef.current.scale.x = getForceArrowScale(appliedForce)
+        const fScale = getForceArrowScale(appliedForce)
+        forceArrowRef.current.scale.set(fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
       }
     }
 
@@ -244,7 +246,8 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
       frictionArrowRef.current.visible = showFriction
       if (showFriction) {
         frictionArrowRef.current.position.set(sim.position - 1.1 * scaleFactor, 0.04, 0)
-        frictionArrowRef.current.scale.x = -getForceArrowScale(frictionMag)
+        const fricScale = getForceArrowScale(frictionMag)
+        frictionArrowRef.current.scale.set(-fricScale, Math.max(0.5, fricScale), Math.max(0.5, fricScale))
       }
     }
 
