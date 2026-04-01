@@ -1,14 +1,18 @@
 import { useState, useEffect, useCallback } from 'react'
 import NewtonFirstLawPage from '../features/newton-first-law/NewtonFirstLawPage.jsx'
 import NewtonSecondLawPage from '../features/newton-second-law/NewtonSecondLawPage.jsx'
+import NewtonThirdLawPage from '../features/newton-third-law/NewtonThirdLawPage.jsx'
 
 const TABS = [
   { key: 'first', label: '牛顿第一定律', hash: '#1' },
   { key: 'second', label: '牛顿第二定律', hash: '#2' },
+  { key: 'third', label: '牛顿第三定律', hash: '#3' },
 ]
 
 function getInitialTab(pathname, hash) {
-  if (pathname.includes('-2') || hash === '#2') return 'second'
+  if (pathname.includes('-2')) return 'second'
+  if (pathname.includes('-3') || hash === '#3') return 'third'
+  if (hash === '#2') return 'second'
   return 'first'
 }
 
@@ -21,9 +25,11 @@ export default function NewtonPage() {
   )
 
   useEffect(() => {
-    const title = activeTab === 'second'
-      ? '牛顿第二定律 · 互动概念卡'
-      : '牛顿第一定律 · 互动概念卡'
+    const title = activeTab === 'third'
+      ? '牛顿第三定律 · 互动概念卡'
+      : activeTab === 'second'
+        ? '牛顿第二定律 · 互动概念卡'
+        : '牛顿第一定律 · 互动概念卡'
     document.title = title
   }, [activeTab])
 
@@ -40,7 +46,8 @@ export default function NewtonPage() {
   useEffect(() => {
     const onHashChange = () => {
       const hash = window.location.hash
-      if (hash === '#2') setActiveTab('second')
+      if (hash === '#3') setActiveTab('third')
+      else if (hash === '#2') setActiveTab('second')
       else if (hash === '#1' || hash === '') setActiveTab('first')
     }
     window.addEventListener('hashchange', onHashChange)
@@ -60,7 +67,9 @@ export default function NewtonPage() {
           </button>
         ))}
       </nav>
-      {activeTab === 'second' ? <NewtonSecondLawPage /> : <NewtonFirstLawPage />}
+      {activeTab === 'third' ? <NewtonThirdLawPage />
+        : activeTab === 'second' ? <NewtonSecondLawPage />
+        : <NewtonFirstLawPage />}
     </>
   )
 }

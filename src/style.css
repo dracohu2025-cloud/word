@@ -480,8 +480,21 @@ select {
   background: rgba(8, 13, 20, 0.72);
 }
 
+.arrow-label-reaction {
+  color: #c084fc;
+  background: rgba(8, 13, 20, 0.72);
+}
+
+.newton-slider-dock-4 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+
 @media (max-width: 1024px) {
   .newton-slider-dock-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .newton-slider-dock-4 {
     grid-template-columns: 1fr;
   }
 }
