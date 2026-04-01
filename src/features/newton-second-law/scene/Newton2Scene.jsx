@@ -226,7 +226,7 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
     if (velocityArrowRef.current) {
       velocityArrowRef.current.position.set(sim.position + 1.2 * scaleFactor, 1.18, 0)
       const vScale = getVelocityArrowScale(sim.velocity)
-      velocityArrowRef.current.scale.set(vScale, Math.max(0.5, vScale), Math.max(0.5, vScale))
+      velocityArrowRef.current.scale.set(vScale, Math.min(1, Math.max(0.6, vScale * 0.5)), Math.min(1, Math.max(0.6, vScale * 0.5)))
       velocityArrowRef.current.visible = Math.abs(sim.velocity) > 0.03
     }
 
@@ -319,11 +319,11 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
 
       <group ref={velocityArrowRef}>
         <mesh position={[0.45, 0, 0]}>
-          <boxGeometry args={[0.92, 0.07, 0.07]} />
+          <boxGeometry args={[0.92, 0.04, 0.04]} />
           <meshStandardMaterial color="#58a6ff" emissive="#2c62aa" emissiveIntensity={0.58} />
         </mesh>
         <mesh position={[1, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-          <coneGeometry args={[0.18, 0.36, 20]} />
+          <coneGeometry args={[0.12, 0.24, 16]} />
           <meshStandardMaterial color="#58a6ff" emissive="#2c62aa" emissiveIntensity={0.58} />
         </mesh>
         <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>

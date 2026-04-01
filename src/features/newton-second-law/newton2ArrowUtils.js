@@ -2,10 +2,10 @@ export function getVelocityArrowScale(speed) {
   const magnitude = Math.abs(speed)
 
   if (magnitude < 0.03) {
-    return 0.45
+    return 0.35
   }
 
-  return Math.max(0.45, 0.52 + magnitude * 0.3 + Math.sqrt(magnitude) * 0.56)
+  return 0.35 + magnitude * 0.8
 }
 
 const MAX_FORCE = 20
