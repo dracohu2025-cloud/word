@@ -202,12 +202,12 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
     const acceleration = netForce / controls.mass
     let nextVelocity = previousVelocity + acceleration * dt
 
-    if (
-      Math.abs(previousVelocity) > 0 &&
-      appliedForce === 0 &&
-      Math.sign(previousVelocity) !== Math.sign(nextVelocity)
-    ) {
-      nextVelocity = 0
+    if (Math.sign(previousVelocity) !== Math.sign(nextVelocity)) {
+      if (appliedForce === 0) {
+        nextVelocity = 0
+      } else if (Math.abs(previousVelocity) < 0.05) {
+        nextVelocity = 0
+      }
     }
 
     sim.velocity = nextVelocity
