@@ -265,10 +265,10 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
 
   const s = scaleFactor
   const wheelPositions = [
-    [-0.5 * s, -0.02, 0.42 * s],
-    [0.5 * s, -0.02, 0.42 * s],
-    [-0.5 * s, -0.02, -0.42 * s],
-    [0.5 * s, -0.02, -0.42 * s],
+    [-0.5 * s, -0.06, 0.44 * s],
+    [0.5 * s, -0.06, 0.44 * s],
+    [-0.5 * s, -0.06, -0.44 * s],
+    [0.5 * s, -0.06, -0.44 * s],
   ]
 
   return (
@@ -283,10 +283,16 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
           <meshStandardMaterial color={cartStyle.topColor} metalness={0.1} roughness={0.5} />
         </mesh>
         {wheelPositions.map(([x, y, z]) => (
-          <mesh key={`${x}-${z}`} castShadow position={[x, y, z]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.18 * s, 0.06 * s, 18, 28]} />
-            <meshStandardMaterial color="#0f1319" metalness={0.4} roughness={0.45} />
-          </mesh>
+          <group key={`${x}-${z}`} position={[x, y, z]} rotation={[Math.PI / 2, 0, 0]}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.16 * s, 0.16 * s, 0.1 * s, 24]} />
+              <meshStandardMaterial color="#1a1f28" metalness={0.15} roughness={0.75} />
+            </mesh>
+            <mesh position={[0, 0.03, 0]}>
+              <cylinderGeometry args={[0.08 * s, 0.08 * s, 0.1 * s, 16]} />
+              <meshStandardMaterial color="#8a9bb0" metalness={0.7} roughness={0.25} />
+            </mesh>
+          </group>
         ))}
       </group>
 

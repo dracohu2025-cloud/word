@@ -258,15 +258,21 @@ function CartRig({ controls, runKey, onMetricsChange, motionRef }) {
           <meshStandardMaterial color="#f3c995" metalness={0.1} roughness={0.5} />
         </mesh>
         {[
-          [-0.5, -0.02, 0.42],
-          [0.5, -0.02, 0.42],
-          [-0.5, -0.02, -0.42],
-          [0.5, -0.02, -0.42],
+          [-0.5, -0.06, 0.44],
+          [0.5, -0.06, 0.44],
+          [-0.5, -0.06, -0.44],
+          [0.5, -0.06, -0.44],
         ].map(([x, y, z]) => (
-          <mesh key={`${x}-${z}`} castShadow position={[x, y, z]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.18, 0.06, 18, 28]} />
-            <meshStandardMaterial color="#0f1319" metalness={0.4} roughness={0.45} />
-          </mesh>
+          <group key={`${x}-${z}`} position={[x, y, z]} rotation={[Math.PI / 2, 0, 0]}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.16, 0.16, 0.1, 24]} />
+              <meshStandardMaterial color="#1a1f28" metalness={0.15} roughness={0.75} />
+            </mesh>
+            <mesh position={[0, 0.03, 0]}>
+              <cylinderGeometry args={[0.08, 0.08, 0.1, 16]} />
+              <meshStandardMaterial color="#8a9bb0" metalness={0.7} roughness={0.25} />
+            </mesh>
+          </group>
         ))}
       </group>
 
