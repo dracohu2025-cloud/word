@@ -319,11 +319,11 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
 
       <group ref={velocityArrowRef}>
         <mesh position={[0.45, 0, 0]}>
-          <boxGeometry args={[0.92, 0.04, 0.04]} />
+          <boxGeometry args={[0.92, 0.025, 0.025]} />
           <meshStandardMaterial color="#58a6ff" emissive="#2c62aa" emissiveIntensity={0.58} />
         </mesh>
         <mesh position={[1, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-          <coneGeometry args={[0.12, 0.24, 16]} />
+          <coneGeometry args={[0.08, 0.18, 12]} />
           <meshStandardMaterial color="#58a6ff" emissive="#2c62aa" emissiveIntensity={0.58} />
         </mesh>
         <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>

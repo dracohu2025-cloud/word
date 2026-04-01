@@ -5,7 +5,7 @@ export function getVelocityArrowScale(speed) {
     return 0.35
   }
 
-  return 0.35 + magnitude * 0.8
+  return 0.35 + magnitude * 2.4
 }
 
 const MAX_FORCE = 20
