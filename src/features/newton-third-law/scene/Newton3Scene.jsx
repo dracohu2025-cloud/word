@@ -218,24 +218,24 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
       velArrowRef.current.visible = Math.abs(sim.velocity) > 0.03
     }
 
-    // Push force arrow (green, pointing right toward wall)
+    // Push force arrow (green, behind cart, pointing right)
     const showPush = appliedForce > 0.1
     if (pushArrowRef.current) {
       pushArrowRef.current.visible = showPush
       if (showPush) {
         const fScale = getForceArrowScale(appliedForce)
-        pushArrowRef.current.position.set(sim.position - 0.8 * s, 1.05, 0)
+        pushArrowRef.current.position.set(sim.position - 1.4 * s, 1.15, 0)
         pushArrowRef.current.scale.set(fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
       }
     }
 
-    // Wall reaction arrow (purple, pointing left from wall)
+    // Wall reaction arrow (purple, wall side, pointing left)
     const showWall = appliedForce > 0.1 && touchingWall
     if (wallArrowRef.current) {
       wallArrowRef.current.visible = showWall
       if (showWall) {
         const fScale = getForceArrowScale(appliedForce)
-        wallArrowRef.current.position.set(WALL_X - 0.3, 1.05, 0)
+        wallArrowRef.current.position.set(WALL_X + 0.4, 0.9, 0)
         wallArrowRef.current.scale.set(-fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
       }
     }
