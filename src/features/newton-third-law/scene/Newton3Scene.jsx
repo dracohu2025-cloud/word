@@ -12,29 +12,15 @@ const POST_COUNT = 26
 
 const WALL_X = 3.0
 const CART_HALF_LENGTH = 0.9
-const INITIAL_CART_X = WALL_X - CART_HALF_LENGTH
 
-function InfiniteGuideRail3({ friction, motionRef }) {
+function cartPositionAgainstWall(s) {
+  return WALL_X - CART_HALF_LENGTH * s
+}
+
+function InfiniteGuideRail3({ motionRef }) {
   const leftPosts = useRef([])
   const rightPosts = useRef([])
   const slots = useMemo(() => Array.from({ length: POST_COUNT }, (_, i) => i), [])
-  const frictionRatio = Math.min(1, friction / 0.7)
-  const surfaceStyle = useMemo(() => {
-    const smoothColor = new THREE.Color('#2d4c68')
-    const roughColor = new THREE.Color('#4a4034')
-    const laneColor = new THREE.Color().lerpColors(smoothColor, roughColor, frictionRatio)
-
-    return {
-      laneColor: laneColor.getStyle(),
-      laneRoughness: 0.2 + frictionRatio * 0.68,
-      laneMetalness: 0.64 - frictionRatio * 0.42,
-      baseColor: new THREE.Color().lerpColors(
-        new THREE.Color('#121d29'),
-        new THREE.Color('#262018'),
-        frictionRatio,
-      ).getStyle(),
-    }
-  }, [frictionRatio])
 
   useFrame(() => {
     const anchorX = motionRef.current.position
@@ -54,16 +40,16 @@ function InfiniteGuideRail3({ friction, motionRef }) {
     <group>
       <mesh receiveShadow position={[0, TRACK_Y, 0]}>
         <boxGeometry args={[3600, 0.16, 5.8]} />
-        <meshStandardMaterial color={surfaceStyle.baseColor} metalness={0.08} roughness={0.94} />
+        <meshStandardMaterial color="#121d29" metalness={0.08} roughness={0.94} />
       </mesh>
       <mesh receiveShadow position={[0, TRACK_Y + 0.03, 0]}>
         <boxGeometry args={[3600, 0.03, 1.38]} />
         <meshStandardMaterial
-          color={surfaceStyle.laneColor}
-          metalness={surfaceStyle.laneMetalness}
-          roughness={surfaceStyle.laneRoughness}
-          emissive={frictionRatio < 0.1 ? '#17324c' : '#20160d'}
-          emissiveIntensity={frictionRatio < 0.1 ? 0.16 : 0.05}
+          color="#2d4c68"
+          metalness={0.64}
+          roughness={0.2}
+          emissive="#17324c"
+          emissiveIntensity={0.16}
         />
       </mesh>
       <mesh position={[0, TRACK_Y + 0.1, RAIL_Z]}>
@@ -132,11 +118,9 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
   const velArrowRef = useRef(null)
   const pushArrowRef = useRef(null)
   const wallArrowRef = useRef(null)
-  const frictionArrowRef = useRef(null)
   const velLabelRef = useRef(null)
   const pushLabelRef = useRef(null)
   const wallLabelRef = useRef(null)
-  const frictionLabelRef = useRef(null)
 
   const cameraGoal = useRef(new THREE.Vector3(-4.0, 2.85, 8.4))
   const { camera } = useThree()
@@ -152,23 +136,23 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
 
   useEffect(() => {
     const sim = motionRef.current
-    sim.position = INITIAL_CART_X
+    const startPos = cartPositionAgainstWall(s)
+    sim.position = startPos
     sim.velocity = 0
     sim.phase = 'idle'
     sim.wallForce = 0
 
-    if (cartRef.current) cartRef.current.position.set(INITIAL_CART_X, 0.04, 0)
+    if (cartRef.current) cartRef.current.position.set(startPos, 0.04, 0)
 
     onMetricsChange({
       speed: 0,
       acceleration: 0,
       appliedForce: 0,
       wallForce: 0,
-      frictionForce: 0,
       stateLabel: '已重置',
       phase: 'idle',
     })
-  }, [motionRef, onMetricsChange, runKey])
+  }, [motionRef, onMetricsChange, runKey, s])
 
   useFrame((_, delta) => {
     const body = cartRef.current
@@ -176,54 +160,45 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
 
     const dt = Math.min(delta, 1 / 60)
     const sim = motionRef.current
-    const { mass, appliedForce, friction } = controls
+    const { mass, appliedForce } = controls
     const prevVel = sim.velocity
 
-    let frictionForce = 0
-    let wallReaction = 0
-    let contactPhase = sim.phase === 'idle' || sim.phase === 'contact'
+    // Keep cart against wall when idle and no force
+    if (appliedForce < 0.1 && Math.abs(sim.velocity) < 0.001) {
+      sim.position = cartPositionAgainstWall(s)
+      sim.velocity = 0
+      sim.phase = 'idle'
+      sim.wallForce = 0
+    }
 
+    let wallReaction = 0
     const cartFront = sim.position + CART_HALF_LENGTH * s
-    const touchingWall = cartFront >= WALL_X - 0.02
+    const touchingWall = cartFront >= WALL_X - 0.05
 
     if (appliedForce > 0.1 && touchingWall) {
       wallReaction = -appliedForce
-      if (sim.phase === 'idle') sim.phase = 'contact'
-      contactPhase = true
+      sim.phase = 'contact'
+    } else if (appliedForce > 0.1 && !touchingWall) {
+      // Cart moving toward wall
+      sim.phase = 'approaching'
     }
 
-    if (contactPhase && appliedForce > 0.1 && touchingWall) {
-      frictionForce = 0
-    } else if (Math.abs(prevVel) > 0.0001) {
-      frictionForce = -Math.sign(prevVel) * friction * 5.6
-    }
-
-    const netForce = appliedForce + wallReaction + frictionForce
+    const netForce = appliedForce + wallReaction
     const acceleration = netForce / mass
     let nextVel = prevVel + acceleration * dt
 
-    if (Math.sign(prevVel) !== Math.sign(nextVel)) {
-      if (Math.abs(prevVel) < 0.05 || !contactPhase) {
-        nextVel = 0
-      }
+    // Clamp velocity to zero on sign flip
+    if (Math.sign(prevVel) !== Math.sign(nextVel) && Math.abs(prevVel) < 0.05) {
+      nextVel = 0
     }
 
     sim.velocity = nextVel
     sim.position += nextVel * dt
-
-    if (sim.position + CART_HALF_LENGTH * s > WALL_X) {
-      sim.position = WALL_X - CART_HALF_LENGTH * s
-    }
-
     sim.wallForce = wallReaction
 
-    if (contactPhase && appliedForce < 0.1 && Math.abs(sim.velocity) < 0.001) {
-      sim.phase = 'idle'
-    }
-
-    if (!contactPhase && Math.abs(sim.velocity) < 0.001) {
-      sim.velocity = 0
-      sim.phase = 'idle'
+    // Don't let cart penetrate wall
+    if (sim.position + CART_HALF_LENGTH * s > WALL_X) {
+      sim.position = WALL_X - CART_HALF_LENGTH * s
     }
 
     body.position.set(sim.position, 0.04, 0)
@@ -255,25 +230,13 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
     }
 
     // Wall reaction arrow (purple, pointing left from wall)
-    const showWall = contactPhase && appliedForce > 0.1 && touchingWall
+    const showWall = appliedForce > 0.1 && touchingWall
     if (wallArrowRef.current) {
       wallArrowRef.current.visible = showWall
       if (showWall) {
         const fScale = getForceArrowScale(appliedForce)
-        wallArrowRef.current.position.set(WALL_X, 1.05, 0)
+        wallArrowRef.current.position.set(WALL_X - 0.3, 1.05, 0)
         wallArrowRef.current.scale.set(-fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
-      }
-    }
-
-    // Friction arrow (orange)
-    const frictionMag = Math.abs(frictionForce)
-    const showFriction = frictionMag > 0.05 && !contactPhase
-    if (frictionArrowRef.current) {
-      frictionArrowRef.current.visible = showFriction
-      if (showFriction) {
-        const fScale = getForceArrowScale(frictionMag)
-        frictionArrowRef.current.position.set(sim.position - 1.1 * s, 0.04, 0)
-        frictionArrowRef.current.scale.set(-fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
       }
     }
 
@@ -291,10 +254,6 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
       wallLabelRef.current.textContent = `${appliedForce.toFixed(1)} N`
       wallLabelRef.current.style.display = showWall ? '' : 'none'
     }
-    if (frictionLabelRef.current) {
-      frictionLabelRef.current.textContent = `${frictionMag.toFixed(1)} N`
-      frictionLabelRef.current.style.display = showFriction ? '' : 'none'
-    }
 
     const stateLabel = getNewton3CartLabel({
       speed: sim.velocity,
@@ -308,7 +267,6 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
       acceleration,
       appliedForce,
       wallForce: wallReaction,
-      frictionForce,
       stateLabel,
       phase: sim.phase,
     })
@@ -390,28 +348,13 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
           <div ref={wallLabelRef} className="arrow-label arrow-label-reaction">0.0 N</div>
         </Html>
       </group>
-
-      {/* Friction arrow (orange, pointing left when cart moves right) */}
-      <group ref={frictionArrowRef}>
-        <mesh position={[0.45, 0, 0]}>
-          <boxGeometry args={[0.92, 0.07, 0.07]} />
-          <meshStandardMaterial color="#ff8b73" emissive="#8a3a2a" emissiveIntensity={0.58} />
-        </mesh>
-        <mesh position={[1, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-          <coneGeometry args={[0.18, 0.36, 20]} />
-          <meshStandardMaterial color="#ff8b73" emissive="#8a3a2a" emissiveIntensity={0.58} />
-        </mesh>
-        <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
-          <div ref={frictionLabelRef} className="arrow-label arrow-label-friction">0.0 N</div>
-        </Html>
-      </group>
     </>
   )
 }
 
 export default function Newton3Scene({ controls, runKey, onMetricsChange }) {
   const motionRef = useRef({
-    position: INITIAL_CART_X,
+    position: WALL_X - CART_HALF_LENGTH * 0.78,
     velocity: 0,
     phase: 'idle',
     wallForce: 0,
@@ -432,7 +375,7 @@ export default function Newton3Scene({ controls, runKey, onMetricsChange }) {
           shadow-mapSize-height={1024}
         />
 
-        <InfiniteGuideRail3 friction={controls.friction} motionRef={motionRef} />
+        <InfiniteGuideRail3 motionRef={motionRef} />
         <Wall />
         <CartRig3
           controls={controls}

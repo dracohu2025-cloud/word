@@ -4,7 +4,6 @@ import { getNewton3Explanation } from './newton3Explanation.js'
 const DEFAULT_CONTROLS = {
   mass: 2,
   appliedForce: 0,
-  friction: 0.05,
 }
 
 const DEFAULT_METRICS = {
@@ -12,7 +11,6 @@ const DEFAULT_METRICS = {
   acceleration: 0,
   appliedForce: 0,
   wallForce: 0,
-  frictionForce: 0,
   stateLabel: '等待施力',
   phase: 'idle',
 }

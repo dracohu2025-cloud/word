@@ -23,7 +23,7 @@ export default function NewtonThirdLawPage() {
     () => [
       ['速度', `${metrics.speed.toFixed(2)} m/s`],
       ['加速度', `${metrics.acceleration.toFixed(2)} m/s²`],
-      ['推力', `${(metrics.appliedForce || controls.appliedForce).toFixed(1)} N`],
+      ['推力（你施加）', `${(metrics.appliedForce || controls.appliedForce).toFixed(1)} N`],
       ['墙反作用力', `${Math.abs(metrics.wallForce).toFixed(1)} N`],
     ],
     [metrics.speed, metrics.acceleration, metrics.appliedForce, metrics.wallForce, controls.appliedForce],
@@ -101,7 +101,7 @@ export default function NewtonThirdLawPage() {
             </div>
 
             <div className="newton-scene-console">
-              <div className="newton-slider-dock newton-slider-dock-3">
+              <div className="newton-slider-dock">
                 <label className="newton-control">
                   <span>推力 (N)</span>
                   <strong>{controls.appliedForce.toFixed(1)}</strong>
@@ -125,19 +125,6 @@ export default function NewtonThirdLawPage() {
                     step="0.5"
                     value={controls.mass}
                     onChange={e => updateControl('mass', Number(e.target.value))}
-                  />
-                </label>
-
-                <label className="newton-control">
-                  <span>摩擦系数</span>
-                  <strong>{controls.friction.toFixed(2)}</strong>
-                  <input
-                    type="range"
-                    min="0"
-                    max="0.7"
-                    step="0.01"
-                    value={controls.friction}
-                    onChange={e => updateControl('friction', Number(e.target.value))}
                   />
                 </label>
 
