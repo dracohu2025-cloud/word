@@ -224,7 +224,7 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
       pushArrowRef.current.visible = showPush
       if (showPush) {
         const fScale = getForceArrowScale(appliedForce)
-        pushArrowRef.current.position.set(sim.position - 1.2 * s, 1.05, 0)
+        pushArrowRef.current.position.set(sim.position - 1.2 * s, 1.2, 0)
         pushArrowRef.current.scale.set(fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
       }
     }
@@ -235,7 +235,7 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
       wallArrowRef.current.visible = showWall
       if (showWall) {
         const fScale = getForceArrowScale(appliedForce)
-        wallArrowRef.current.position.set(sim.position + 1.2 * s, 1.05, 0)
+        wallArrowRef.current.position.set(sim.position + 1.2 * s, 0.85, 0)
         wallArrowRef.current.scale.set(-fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
       }
     }
