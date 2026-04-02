@@ -132,6 +132,8 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
   const frictionLabelRef = useRef(null)
   const cameraGoal = useRef(new THREE.Vector3(4.8, 2.85, 8.4))
   const { camera } = useThree()
+  const controlsRef = useRef(controls)
+  controlsRef.current = controls
 
   const massRatio = (controls.mass - 1) / 9
   const scaleFactor = 0.7 + massRatio * 0.7
@@ -186,26 +188,25 @@ function CartRig2({ controls, runKey, onMetricsChange, motionRef }) {
     const sim = motionRef.current
     const previousVelocity = sim.velocity
 
-    const appliedForce = controls.appliedForce
+    const c = controlsRef.current
+    const appliedForce = c.appliedForce
 
     let frictionForce = 0
-    if (Math.abs(previousVelocity) > 0.0001) {
-      frictionForce = -Math.sign(previousVelocity) * controls.friction * 5.6
-    } else if (appliedForce > 0) {
-      const staticFrictionThreshold = controls.friction * 4.0
-      if (appliedForce <= staticFrictionThreshold) {
+    if (Math.abs(previousVelocity) > 0.001) {
+      frictionForce = -Math.sign(previousVelocity) * c.friction * 5.6
+    } else {
+      const staticFrictionThreshold = c.friction * 4.0
+      if (Math.abs(appliedForce) <= staticFrictionThreshold) {
         frictionForce = -appliedForce
       }
     }
 
     const netForce = appliedForce + frictionForce
-    const acceleration = netForce / controls.mass
+    const acceleration = netForce / c.mass
     let nextVelocity = previousVelocity + acceleration * dt
 
     if (Math.sign(previousVelocity) !== Math.sign(nextVelocity)) {
       if (appliedForce === 0) {
-        nextVelocity = 0
-      } else if (Math.abs(previousVelocity) < 0.05) {
         nextVelocity = 0
       }
     }
