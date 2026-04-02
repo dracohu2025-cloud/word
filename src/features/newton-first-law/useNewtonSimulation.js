@@ -3,7 +3,7 @@ import { getNewtonExplanation } from './newtonExplanation.js'
 
 const DEFAULT_CONTROLS = {
   appliedForce: 0,
-  initialSpeed: 4,
+  initialSpeed: 1,
   friction: 0,
 }
 
