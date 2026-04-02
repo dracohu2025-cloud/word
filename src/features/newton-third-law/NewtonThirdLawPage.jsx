@@ -21,12 +21,12 @@ export default function NewtonThirdLawPage() {
 
   const hud = useMemo(
     () => [
-      ['A车加速度', `${metrics.accelerationA.toFixed(2)} m/s²`],
-      ['B车加速度', `${metrics.accelerationB.toFixed(2)} m/s²`],
-      ['A车受力', `${Math.abs(metrics.forceOnA).toFixed(1)} N`],
-      ['B车受力', `${Math.abs(metrics.forceOnB).toFixed(1)} N`],
+      ['速度', `${metrics.speed.toFixed(2)} m/s`],
+      ['加速度', `${metrics.acceleration.toFixed(2)} m/s²`],
+      ['推力', `${(metrics.appliedForce || controls.appliedForce).toFixed(1)} N`],
+      ['墙反作用力', `${Math.abs(metrics.wallForce).toFixed(1)} N`],
     ],
-    [metrics.accelerationA, metrics.accelerationB, metrics.forceOnA, metrics.forceOnB],
+    [metrics.speed, metrics.acceleration, metrics.appliedForce, metrics.wallForce, controls.appliedForce],
   )
 
   const phaseLabel = useMemo(
@@ -47,8 +47,8 @@ export default function NewtonThirdLawPage() {
           <span className="newton-kicker">Prototype 03 · Interactive Concept Card</span>
           <h1>牛顿第三定律</h1>
           <p className="newton-subtitle">
-            一张会动的概念卡。你设定两辆小车的质量和推力，不是为了看一个小游戏，
-            而是为了亲眼看出：力永远是成对出现的——大小相等，方向相反，作用在不同物体上。
+            一张会动的概念卡。你推小车撞墙，不是为了看一个小游戏，
+            而是为了亲眼看出：你推墙的力和墙推回来的力永远大小相等、方向相反。
           </p>
         </div>
         <div className="newton-status-grid">
@@ -70,10 +70,10 @@ export default function NewtonThirdLawPage() {
         <div className="newton-stage-header">
           <div>
             <span className="section-tag">主互动区</span>
-            <h2>作用力与反作用力实验舱</h2>
+            <h2>推墙实验舱</h2>
           </div>
           <div className="newton-stage-summary">
-            <span>调节两车质量和推力</span>
+            <span>推小车撞墙</span>
             <span>观察力成对出现</span>
           </div>
         </div>
@@ -96,42 +96,12 @@ export default function NewtonThirdLawPage() {
               <div className="newton-scene-readout">
                 <span className="section-tag">舱内读数</span>
                 <strong>{phaseLabel}</strong>
-                <small>
-                  A: {metrics.stateLabelA} · {metrics.speedA.toFixed(2)} m/s · {Math.abs(metrics.forceOnA).toFixed(1)} N
-                  {' | '}
-                  B: {metrics.stateLabelB} · {metrics.speedB.toFixed(2)} m/s · {Math.abs(metrics.forceOnB).toFixed(1)} N
-                </small>
+                <small>速度 {metrics.speed.toFixed(2)} · 推力 {(metrics.appliedForce || controls.appliedForce).toFixed(1)} N · 墙力 {Math.abs(metrics.wallForce).toFixed(1)} N</small>
               </div>
             </div>
 
             <div className="newton-scene-console">
-              <div className="newton-slider-dock newton-slider-dock-4">
-                <label className="newton-control">
-                  <span>A车质量 (kg)</span>
-                  <strong>{controls.massA.toFixed(1)}</strong>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    step="0.5"
-                    value={controls.massA}
-                    onChange={e => updateControl('massA', Number(e.target.value))}
-                  />
-                </label>
-
-                <label className="newton-control">
-                  <span>B车质量 (kg)</span>
-                  <strong>{controls.massB.toFixed(1)}</strong>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    step="0.5"
-                    value={controls.massB}
-                    onChange={e => updateControl('massB', Number(e.target.value))}
-                  />
-                </label>
-
+              <div className="newton-slider-dock newton-slider-dock-3">
                 <label className="newton-control">
                   <span>推力 (N)</span>
                   <strong>{controls.appliedForce.toFixed(1)}</strong>
@@ -142,6 +112,19 @@ export default function NewtonThirdLawPage() {
                     step="0.5"
                     value={controls.appliedForce}
                     onChange={e => updateControl('appliedForce', Number(e.target.value))}
+                  />
+                </label>
+
+                <label className="newton-control">
+                  <span>质量 (kg)</span>
+                  <strong>{controls.mass.toFixed(1)}</strong>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    step="0.5"
+                    value={controls.mass}
+                    onChange={e => updateControl('mass', Number(e.target.value))}
                   />
                 </label>
 

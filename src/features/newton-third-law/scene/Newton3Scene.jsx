@@ -9,11 +9,10 @@ const TRACK_Y = -0.42
 const RAIL_Z = 1.72
 const POST_SPACING = 5.6
 const POST_COUNT = 26
-const CART_HALF_LENGTH = 0.9
-const SEPARATION_GAP = 0.15
 
-const INITIAL_POS_A = -1.5
-const INITIAL_POS_B = 0.5
+const WALL_X = 3.0
+const CART_HALF_LENGTH = 0.9
+const INITIAL_CART_X = WALL_X - CART_HALF_LENGTH
 
 function InfiniteGuideRail3({ friction, motionRef }) {
   const leftPosts = useRef([])
@@ -38,7 +37,7 @@ function InfiniteGuideRail3({ friction, motionRef }) {
   }, [frictionRatio])
 
   useFrame(() => {
-    const anchorX = (motionRef.current.positionA + motionRef.current.positionB) / 2
+    const anchorX = motionRef.current.position
     const base = Math.floor(anchorX / POST_SPACING) * POST_SPACING
     const centerOffset = (POST_COUNT - 1) / 2
 
@@ -103,292 +102,252 @@ function InfiniteGuideRail3({ friction, motionRef }) {
   )
 }
 
-function computeFrictionForce(velocity, frictionCoeff, appliedForceOnCart) {
-  if (Math.abs(velocity) > 0.0001) {
-    return -Math.sign(velocity) * frictionCoeff * 5.6
-  }
-  if (Math.abs(appliedForceOnCart) > 0) {
-    const staticThreshold = frictionCoeff * 4.0
-    if (Math.abs(appliedForceOnCart) <= staticThreshold) {
-      return -appliedForceOnCart
-    }
-  }
-  return 0
+function Wall() {
+  return (
+    <group position={[WALL_X + 0.25, 0, 0]}>
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[0.5, 4.2, 4.0]} />
+        <meshStandardMaterial color="#3a4558" metalness={0.35} roughness={0.55} />
+      </mesh>
+      <mesh position={[0, 0, 2.01]}>
+        <boxGeometry args={[0.5, 4.2, 0.04]} />
+        <meshStandardMaterial color="#4a5a6e" metalness={0.3} roughness={0.4} />
+      </mesh>
+      <mesh position={[0, 0, -2.01]}>
+        <boxGeometry args={[0.5, 4.2, 0.04]} />
+        <meshStandardMaterial color="#4a5a6e" metalness={0.3} roughness={0.4} />
+      </mesh>
+      {[0.6, 1.4, 2.2].map(y => (
+        <mesh key={y} position={[-0.26, y, 0]}>
+          <boxGeometry args={[0.04, 0.08, 3.8]} />
+          <meshStandardMaterial color="#5d6f85" metalness={0.5} roughness={0.35} />
+        </mesh>
+      ))}
+    </group>
+  )
 }
 
-function clampVelocityZero(prevV, nextV, hasContactForce) {
-  if (Math.sign(prevV) !== Math.sign(nextV)) {
-    if (Math.abs(prevV) < 0.05 || !hasContactForce) {
-      return 0
-    }
-  }
-  return nextV
-}
+function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
+  const cartRef = useRef(null)
+  const velArrowRef = useRef(null)
+  const pushArrowRef = useRef(null)
+  const wallArrowRef = useRef(null)
+  const frictionArrowRef = useRef(null)
+  const velLabelRef = useRef(null)
+  const pushLabelRef = useRef(null)
+  const wallLabelRef = useRef(null)
+  const frictionLabelRef = useRef(null)
 
-function CartMesh({ s, bodyColor, topColor }) {
+  const cameraGoal = useRef(new THREE.Vector3(4.8, 2.85, 8.4))
+  const { camera } = useThree()
+
+  const massRatio = (controls.mass - 1) / 9
+  const s = 0.7 + massRatio * 0.7
+
+  const cartStyle = useMemo(() => {
+    const body = new THREE.Color().lerpColors(new THREE.Color('#e8c090'), new THREE.Color('#6b3a1f'), massRatio)
+    const top = new THREE.Color().lerpColors(new THREE.Color('#f3c995'), new THREE.Color('#3d2815'), massRatio)
+    return { body: body.getStyle(), top: top.getStyle() }
+  }, [massRatio])
+
+  useEffect(() => {
+    const sim = motionRef.current
+    sim.position = INITIAL_CART_X
+    sim.velocity = 0
+    sim.phase = 'idle'
+    sim.wallForce = 0
+
+    if (cartRef.current) cartRef.current.position.set(INITIAL_CART_X, 0.04, 0)
+
+    onMetricsChange({
+      speed: 0,
+      acceleration: 0,
+      appliedForce: 0,
+      wallForce: 0,
+      frictionForce: 0,
+      stateLabel: '已重置',
+      phase: 'idle',
+    })
+  }, [motionRef, onMetricsChange, runKey])
+
+  useFrame((_, delta) => {
+    const body = cartRef.current
+    if (!body) return
+
+    const dt = Math.min(delta, 1 / 60)
+    const sim = motionRef.current
+    const { mass, appliedForce, friction } = controls
+    const prevVel = sim.velocity
+
+    let frictionForce = 0
+    let wallReaction = 0
+    let contactPhase = sim.phase === 'idle' || sim.phase === 'contact'
+
+    const cartFront = sim.position + CART_HALF_LENGTH * s
+    const touchingWall = cartFront >= WALL_X - 0.02
+
+    if (appliedForce > 0.1 && touchingWall) {
+      wallReaction = -appliedForce
+      if (sim.phase === 'idle') sim.phase = 'contact'
+      contactPhase = true
+    }
+
+    if (contactPhase && appliedForce > 0.1 && touchingWall) {
+      frictionForce = 0
+    } else if (Math.abs(prevVel) > 0.0001) {
+      frictionForce = -Math.sign(prevVel) * friction * 5.6
+    }
+
+    const netForce = appliedForce + wallReaction + frictionForce
+    const acceleration = netForce / mass
+    let nextVel = prevVel + acceleration * dt
+
+    if (Math.sign(prevVel) !== Math.sign(nextVel)) {
+      if (Math.abs(prevVel) < 0.05 || !contactPhase) {
+        nextVel = 0
+      }
+    }
+
+    sim.velocity = nextVel
+    sim.position += nextVel * dt
+
+    if (sim.position + CART_HALF_LENGTH * s > WALL_X) {
+      sim.position = WALL_X - CART_HALF_LENGTH * s
+    }
+
+    sim.wallForce = wallReaction
+
+    if (contactPhase && appliedForce < 0.1 && Math.abs(sim.velocity) < 0.001) {
+      sim.phase = 'idle'
+    }
+
+    if (!contactPhase && Math.abs(sim.velocity) < 0.001) {
+      sim.velocity = 0
+      sim.phase = 'idle'
+    }
+
+    body.position.set(sim.position, 0.04, 0)
+
+    cameraGoal.current.set(sim.position + 5.3, 2.85, 8.4)
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, cameraGoal.current.x, 4.2, dt)
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, cameraGoal.current.y, 4.2, dt)
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, cameraGoal.current.z, 4.2, dt)
+    camera.lookAt(sim.position + 0.4, 0.28, 0)
+
+    // Velocity arrow
+    const vScale = getVelocityArrowScale(sim.velocity)
+    const vClamp = Math.min(1, Math.max(0.6, vScale * 0.5))
+    if (velArrowRef.current) {
+      velArrowRef.current.position.set(sim.position + 1.0 * s, 1.18, 0)
+      velArrowRef.current.scale.set(vScale, vClamp, vClamp)
+      velArrowRef.current.visible = Math.abs(sim.velocity) > 0.03
+    }
+
+    // Push force arrow (green, pointing right toward wall)
+    const showPush = appliedForce > 0.1
+    if (pushArrowRef.current) {
+      pushArrowRef.current.visible = showPush
+      if (showPush) {
+        const fScale = getForceArrowScale(appliedForce)
+        pushArrowRef.current.position.set(sim.position - 0.8 * s, 1.05, 0)
+        pushArrowRef.current.scale.set(fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
+      }
+    }
+
+    // Wall reaction arrow (purple, pointing left from wall)
+    const showWall = contactPhase && appliedForce > 0.1 && touchingWall
+    if (wallArrowRef.current) {
+      wallArrowRef.current.visible = showWall
+      if (showWall) {
+        const fScale = getForceArrowScale(appliedForce)
+        wallArrowRef.current.position.set(WALL_X, 1.05, 0)
+        wallArrowRef.current.scale.set(-fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
+      }
+    }
+
+    // Friction arrow (orange)
+    const frictionMag = Math.abs(frictionForce)
+    const showFriction = frictionMag > 0.05 && !contactPhase
+    if (frictionArrowRef.current) {
+      frictionArrowRef.current.visible = showFriction
+      if (showFriction) {
+        const fScale = getForceArrowScale(frictionMag)
+        frictionArrowRef.current.position.set(sim.position - 1.1 * s, 0.04, 0)
+        frictionArrowRef.current.scale.set(-fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
+      }
+    }
+
+    // Labels
+    if (velLabelRef.current) {
+      const v = Math.abs(sim.velocity)
+      velLabelRef.current.textContent = `${v.toFixed(2)} m/s`
+      velLabelRef.current.style.display = v > 0.03 ? '' : 'none'
+    }
+    if (pushLabelRef.current) {
+      pushLabelRef.current.textContent = `${appliedForce.toFixed(1)} N`
+      pushLabelRef.current.style.display = showPush ? '' : 'none'
+    }
+    if (wallLabelRef.current) {
+      wallLabelRef.current.textContent = `${appliedForce.toFixed(1)} N`
+      wallLabelRef.current.style.display = showWall ? '' : 'none'
+    }
+    if (frictionLabelRef.current) {
+      frictionLabelRef.current.textContent = `${frictionMag.toFixed(1)} N`
+      frictionLabelRef.current.style.display = showFriction ? '' : 'none'
+    }
+
+    const stateLabel = getNewton3CartLabel({
+      speed: sim.velocity,
+      netForce,
+      appliedForce,
+      phase: sim.phase,
+    })
+
+    onMetricsChange({
+      speed: Math.abs(sim.velocity),
+      acceleration,
+      appliedForce,
+      wallForce: wallReaction,
+      frictionForce,
+      stateLabel,
+      phase: sim.phase,
+    })
+  })
+
   const wheels = [
     [-0.5 * s, -0.06, 0.44 * s],
     [0.5 * s, -0.06, 0.44 * s],
     [-0.5 * s, -0.06, -0.44 * s],
     [0.5 * s, -0.06, -0.44 * s],
   ]
-  return (
-    <>
-      <mesh castShadow position={[0, 0.3 * s, 0]}>
-        <boxGeometry args={[1.8 * s, 0.46 * s, 1.06 * s]} />
-        <meshStandardMaterial color={bodyColor} metalness={0.24} roughness={0.38} />
-      </mesh>
-      <mesh castShadow position={[0, 0.62 * s, 0]}>
-        <boxGeometry args={[0.82 * s, 0.26 * s, 0.88 * s]} />
-        <meshStandardMaterial color={topColor} metalness={0.1} roughness={0.5} />
-      </mesh>
-      {wheels.map(([x, y, z]) => (
-        <group key={`${x}-${z}`} position={[x, y, z]} rotation={[Math.PI / 2, 0, 0]}>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.16 * s, 0.16 * s, 0.1 * s, 24]} />
-            <meshStandardMaterial color="#1a1f28" metalness={0.15} roughness={0.75} />
-          </mesh>
-          <mesh position={[0, 0.03, 0]}>
-            <cylinderGeometry args={[0.08 * s, 0.08 * s, 0.1 * s, 16]} />
-            <meshStandardMaterial color="#8a9bb0" metalness={0.7} roughness={0.25} />
-          </mesh>
-        </group>
-      ))}
-    </>
-  )
-}
-
-function CartRigPair({ controls, runKey, onMetricsChange, motionRef }) {
-  const cartARef = useRef(null)
-  const cartBRef = useRef(null)
-  const labelARef = useRef(null)
-  const labelBRef = useRef(null)
-
-  const velArrowARef = useRef(null)
-  const velArrowBRef = useRef(null)
-  const forceArrowARef = useRef(null)
-  const forceArrowBRef = useRef(null)
-  const velLabelARef = useRef(null)
-  const velLabelBRef = useRef(null)
-  const forceLabelARef = useRef(null)
-  const forceLabelBRef = useRef(null)
-
-  const cameraGoal = useRef(new THREE.Vector3(4.8, 2.85, 8.4))
-  const { camera } = useThree()
-
-  const massRatioA = (controls.massA - 1) / 9
-  const massRatioB = (controls.massB - 1) / 9
-  const sA = 0.7 + massRatioA * 0.7
-  const sB = 0.7 + massRatioB * 0.7
-
-  const styleA = useMemo(() => {
-    const body = new THREE.Color().lerpColors(new THREE.Color('#e8c090'), new THREE.Color('#6b3a1f'), massRatioA)
-    const top = new THREE.Color().lerpColors(new THREE.Color('#f3c995'), new THREE.Color('#3d2815'), massRatioA)
-    return { body: body.getStyle(), top: top.getStyle() }
-  }, [massRatioA])
-
-  const styleB = useMemo(() => {
-    const body = new THREE.Color().lerpColors(new THREE.Color('#6ba3c8'), new THREE.Color('#1f3a5f'), massRatioB)
-    const top = new THREE.Color().lerpColors(new THREE.Color('#95c9f3'), new THREE.Color('#152840'), massRatioB)
-    return { body: body.getStyle(), top: top.getStyle() }
-  }, [massRatioB])
-
-  useEffect(() => {
-    const sim = motionRef.current
-    sim.positionA = INITIAL_POS_A
-    sim.positionB = INITIAL_POS_B
-    sim.velocityA = 0
-    sim.velocityB = 0
-    sim.phase = 'idle'
-    sim.forceOnA = 0
-    sim.forceOnB = 0
-
-    if (cartARef.current) cartARef.current.position.set(INITIAL_POS_A, 0.04, 0)
-    if (cartBRef.current) cartBRef.current.position.set(INITIAL_POS_B, 0.04, 0)
-
-    onMetricsChange({
-      speedA: 0, speedB: 0,
-      accelerationA: 0, accelerationB: 0,
-      forceOnA: 0, forceOnB: 0,
-      stateLabelA: '已重置', stateLabelB: '已重置',
-      phase: 'idle',
-    })
-  }, [motionRef, onMetricsChange, runKey])
-
-  useFrame((_, delta) => {
-    const bodyA = cartARef.current
-    const bodyB = cartBRef.current
-    if (!bodyA || !bodyB) return
-
-    const dt = Math.min(delta, 1 / 60)
-    const sim = motionRef.current
-    const { massA, massB, appliedForce, friction } = controls
-
-    const prevVelA = sim.velocityA
-    const prevVelB = sim.velocityB
-
-    const isInContact = sim.phase === 'idle' || sim.phase === 'contact'
-    const isForceActive = appliedForce > 0.1
-
-    let contactForceOnA = 0
-    let contactForceOnB = 0
-
-    if (isInContact && isForceActive) {
-      contactForceOnA = -appliedForce
-      contactForceOnB = +appliedForce
-      if (sim.phase === 'idle') sim.phase = 'contact'
-    }
-
-    const fricA = computeFrictionForce(prevVelA, friction, contactForceOnA)
-    const fricB = computeFrictionForce(prevVelB, friction, contactForceOnB)
-
-    const netForceA = contactForceOnA + fricA
-    const netForceB = contactForceOnB + fricB
-    const accA = netForceA / massA
-    const accB = netForceB / massB
-
-    let nextVelA = prevVelA + accA * dt
-    let nextVelB = prevVelB + accB * dt
-
-    nextVelA = clampVelocityZero(prevVelA, nextVelA, isForceActive)
-    nextVelB = clampVelocityZero(prevVelB, nextVelB, isForceActive)
-
-    sim.velocityA = nextVelA
-    sim.velocityB = nextVelB
-    sim.positionA += nextVelA * dt
-    sim.positionB += nextVelB * dt
-    sim.forceOnA = contactForceOnA
-    sim.forceOnB = contactForceOnB
-
-    if (isInContact && (sim.phase === 'contact' || isForceActive)) {
-      const gap = sim.positionB - sim.positionA
-      if (gap > CART_HALF_LENGTH * (sA + sB) + SEPARATION_GAP) {
-        sim.phase = 'separated'
-        sim.forceOnA = 0
-        sim.forceOnB = 0
-      }
-    }
-
-    if (sim.phase === 'separated') {
-      if (Math.abs(sim.velocityA) < 0.001 && Math.abs(sim.velocityB) < 0.001) {
-        sim.phase = 'stopped'
-        sim.velocityA = 0
-        sim.velocityB = 0
-      }
-    }
-
-    bodyA.position.set(sim.positionA, 0.04, 0)
-    bodyB.position.set(sim.positionB, 0.04, 0)
-
-    const midX = (sim.positionA + sim.positionB) / 2
-    const spread = Math.abs(sim.positionB - sim.positionA)
-    const camZ = Math.max(8.4, spread * 0.4 + 7)
-    cameraGoal.current.set(midX + 3.5, 2.85, camZ)
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, cameraGoal.current.x, 3.5, dt)
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, cameraGoal.current.y, 3.5, dt)
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, cameraGoal.current.z, 3.5, dt)
-    camera.lookAt(midX, 0.28, 0)
-
-    // Velocity arrows
-    const vScaleA = getVelocityArrowScale(sim.velocityA)
-    const vScaleB = getVelocityArrowScale(sim.velocityB)
-    const vClampA = Math.min(1, Math.max(0.6, vScaleA * 0.5))
-    const vClampB = Math.min(1, Math.max(0.6, vScaleB * 0.5))
-
-    if (velArrowARef.current) {
-      velArrowARef.current.position.set(sim.positionA + 1.0 * sA, 1.18, 0)
-      velArrowARef.current.scale.set(vScaleA, vClampA, vClampA)
-      velArrowARef.current.visible = Math.abs(sim.velocityA) > 0.03
-    }
-    if (velArrowBRef.current) {
-      velArrowBRef.current.position.set(sim.positionB + 1.0 * sB, 1.18, 0)
-      velArrowBRef.current.scale.set(vScaleB, vClampB, vClampB)
-      velArrowBRef.current.visible = Math.abs(sim.velocityB) > 0.03
-    }
-
-    // Force arrows — only during contact
-    const showForces = isInContact && isForceActive
-    if (forceArrowARef.current) {
-      forceArrowARef.current.visible = showForces
-      if (showForces) {
-        const fScale = getForceArrowScale(appliedForce)
-        forceArrowARef.current.position.set(sim.positionA - 0.8 * sA, 1.05, 0)
-        forceArrowARef.current.scale.set(-fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
-      }
-    }
-    if (forceArrowBRef.current) {
-      forceArrowBRef.current.visible = showForces
-      if (showForces) {
-        const fScale = getForceArrowScale(appliedForce)
-        forceArrowBRef.current.position.set(sim.positionB + 0.8 * sB, 1.05, 0)
-        forceArrowBRef.current.scale.set(fScale, Math.max(0.5, fScale), Math.max(0.5, fScale))
-      }
-    }
-
-    // Labels
-    if (velLabelARef.current) {
-      const v = Math.abs(sim.velocityA)
-      velLabelARef.current.textContent = `${v.toFixed(2)} m/s`
-      velLabelARef.current.style.display = v > 0.03 ? '' : 'none'
-    }
-    if (velLabelBRef.current) {
-      const v = Math.abs(sim.velocityB)
-      velLabelBRef.current.textContent = `${v.toFixed(2)} m/s`
-      velLabelBRef.current.style.display = v > 0.03 ? '' : 'none'
-    }
-    if (forceLabelARef.current) {
-      forceLabelARef.current.textContent = `${appliedForce.toFixed(1)} N`
-      forceLabelARef.current.style.display = showForces ? '' : 'none'
-    }
-    if (forceLabelBRef.current) {
-      forceLabelBRef.current.textContent = `${appliedForce.toFixed(1)} N`
-      forceLabelBRef.current.style.display = showForces ? '' : 'none'
-    }
-
-    // Floating cart labels
-    if (labelARef.current) {
-      labelARef.current.textContent = `A车 ${massA.toFixed(1)}kg`
-    }
-    if (labelBRef.current) {
-      labelBRef.current.textContent = `B车 ${massB.toFixed(1)}kg`
-    }
-
-    const stateA = getNewton3CartLabel({ speed: sim.velocityA, netForce: netForceA, appliedForce, phase: sim.phase, role: 'A' })
-    const stateB = getNewton3CartLabel({ speed: sim.velocityB, netForce: netForceB, appliedForce, phase: sim.phase, role: 'B' })
-
-    onMetricsChange({
-      speedA: Math.abs(sim.velocityA),
-      speedB: Math.abs(sim.velocityB),
-      accelerationA: accA,
-      accelerationB: accB,
-      forceOnA: contactForceOnA,
-      forceOnB: contactForceOnB,
-      stateLabelA: stateA,
-      stateLabelB: stateB,
-      phase: sim.phase,
-    })
-  })
 
   return (
     <>
-      {/* Cart A — warm colors */}
-      <group ref={cartARef}>
-        <CartMesh s={sA} bodyColor={styleA.body} topColor={styleA.top} />
-        <Html position={[0, 1.1 * sA, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
-          <div ref={labelARef} className="arrow-label" style={{ color: '#f0a35f', background: 'rgba(8,13,20,0.72)', fontSize: '12px', fontWeight: 700 }}>A车</div>
-        </Html>
+      <group ref={cartRef}>
+        <mesh castShadow position={[0, 0.3 * s, 0]}>
+          <boxGeometry args={[1.8 * s, 0.46 * s, 1.06 * s]} />
+          <meshStandardMaterial color={cartStyle.body} metalness={0.24} roughness={0.38} />
+        </mesh>
+        <mesh castShadow position={[0, 0.62 * s, 0]}>
+          <boxGeometry args={[0.82 * s, 0.26 * s, 0.88 * s]} />
+          <meshStandardMaterial color={cartStyle.top} metalness={0.1} roughness={0.5} />
+        </mesh>
+        {wheels.map(([x, y, z]) => (
+          <group key={`${x}-${z}`} position={[x, y, z]} rotation={[Math.PI / 2, 0, 0]}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.16 * s, 0.16 * s, 0.1 * s, 24]} />
+              <meshStandardMaterial color="#1a1f28" metalness={0.15} roughness={0.75} />
+            </mesh>
+            <mesh position={[0, 0.03, 0]}>
+              <cylinderGeometry args={[0.08 * s, 0.08 * s, 0.1 * s, 16]} />
+              <meshStandardMaterial color="#8a9bb0" metalness={0.7} roughness={0.25} />
+            </mesh>
+          </group>
+        ))}
       </group>
 
-      {/* Cart B — cool colors */}
-      <group ref={cartBRef}>
-        <CartMesh s={sB} bodyColor={styleB.body} topColor={styleB.top} />
-        <Html position={[0, 1.1 * sB, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
-          <div ref={labelBRef} className="arrow-label" style={{ color: '#6ba3c8', background: 'rgba(8,13,20,0.72)', fontSize: '12px', fontWeight: 700 }}>B车</div>
-        </Html>
-      </group>
-
-      {/* Velocity arrow A (blue) */}
-      <group ref={velArrowARef}>
+      {/* Velocity arrow (blue) */}
+      <group ref={velArrowRef}>
         <mesh position={[0.45, 0, 0]}>
           <boxGeometry args={[0.92, 0.025, 0.025]} />
           <meshStandardMaterial color="#58a6ff" emissive="#2c62aa" emissiveIntensity={0.58} />
@@ -398,42 +357,12 @@ function CartRigPair({ controls, runKey, onMetricsChange, motionRef }) {
           <meshStandardMaterial color="#58a6ff" emissive="#2c62aa" emissiveIntensity={0.58} />
         </mesh>
         <Html position={[0.5, 0.3, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
-          <div ref={velLabelARef} className="arrow-label arrow-label-velocity">0.00 m/s</div>
+          <div ref={velLabelRef} className="arrow-label arrow-label-velocity">0.00 m/s</div>
         </Html>
       </group>
 
-      {/* Velocity arrow B (blue) */}
-      <group ref={velArrowBRef}>
-        <mesh position={[0.45, 0, 0]}>
-          <boxGeometry args={[0.92, 0.025, 0.025]} />
-          <meshStandardMaterial color="#58a6ff" emissive="#2c62aa" emissiveIntensity={0.58} />
-        </mesh>
-        <mesh position={[1, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-          <coneGeometry args={[0.08, 0.18, 12]} />
-          <meshStandardMaterial color="#58a6ff" emissive="#2c62aa" emissiveIntensity={0.58} />
-        </mesh>
-        <Html position={[0.5, 0.3, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
-          <div ref={velLabelBRef} className="arrow-label arrow-label-velocity">0.00 m/s</div>
-        </Html>
-      </group>
-
-      {/* Reaction force arrow A (purple, pointing backward) */}
-      <group ref={forceArrowARef}>
-        <mesh position={[0.45, 0, 0]}>
-          <boxGeometry args={[0.92, 0.07, 0.07]} />
-          <meshStandardMaterial color="#c084fc" emissive="#6a2ea0" emissiveIntensity={0.58} />
-        </mesh>
-        <mesh position={[1, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-          <coneGeometry args={[0.18, 0.36, 20]} />
-          <meshStandardMaterial color="#c084fc" emissive="#6a2ea0" emissiveIntensity={0.58} />
-        </mesh>
-        <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
-          <div ref={forceLabelARef} className="arrow-label arrow-label-reaction">0.0 N</div>
-        </Html>
-      </group>
-
-      {/* Action force arrow B (green, pointing forward) */}
-      <group ref={forceArrowBRef}>
+      {/* Push force arrow (green, pointing right) */}
+      <group ref={pushArrowRef}>
         <mesh position={[0.45, 0, 0]}>
           <boxGeometry args={[0.92, 0.07, 0.07]} />
           <meshStandardMaterial color="#4ade80" emissive="#1a8a4a" emissiveIntensity={0.58} />
@@ -443,7 +372,37 @@ function CartRigPair({ controls, runKey, onMetricsChange, motionRef }) {
           <meshStandardMaterial color="#4ade80" emissive="#1a8a4a" emissiveIntensity={0.58} />
         </mesh>
         <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
-          <div ref={forceLabelBRef} className="arrow-label arrow-label-force">0.0 N</div>
+          <div ref={pushLabelRef} className="arrow-label arrow-label-force">0.0 N</div>
+        </Html>
+      </group>
+
+      {/* Wall reaction arrow (purple, pointing left) */}
+      <group ref={wallArrowRef}>
+        <mesh position={[0.45, 0, 0]}>
+          <boxGeometry args={[0.92, 0.07, 0.07]} />
+          <meshStandardMaterial color="#c084fc" emissive="#6a2ea0" emissiveIntensity={0.58} />
+        </mesh>
+        <mesh position={[1, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+          <coneGeometry args={[0.18, 0.36, 20]} />
+          <meshStandardMaterial color="#c084fc" emissive="#6a2ea0" emissiveIntensity={0.58} />
+        </mesh>
+        <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
+          <div ref={wallLabelRef} className="arrow-label arrow-label-reaction">0.0 N</div>
+        </Html>
+      </group>
+
+      {/* Friction arrow (orange, pointing left when cart moves right) */}
+      <group ref={frictionArrowRef}>
+        <mesh position={[0.45, 0, 0]}>
+          <boxGeometry args={[0.92, 0.07, 0.07]} />
+          <meshStandardMaterial color="#ff8b73" emissive="#8a3a2a" emissiveIntensity={0.58} />
+        </mesh>
+        <mesh position={[1, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+          <coneGeometry args={[0.18, 0.36, 20]} />
+          <meshStandardMaterial color="#ff8b73" emissive="#8a3a2a" emissiveIntensity={0.58} />
+        </mesh>
+        <Html position={[0.5, 0.35, 0]} center distanceFactor={10} style={{ pointerEvents: 'none' }}>
+          <div ref={frictionLabelRef} className="arrow-label arrow-label-friction">0.0 N</div>
         </Html>
       </group>
     </>
@@ -452,13 +411,10 @@ function CartRigPair({ controls, runKey, onMetricsChange, motionRef }) {
 
 export default function Newton3Scene({ controls, runKey, onMetricsChange }) {
   const motionRef = useRef({
-    positionA: INITIAL_POS_A,
-    positionB: INITIAL_POS_B,
-    velocityA: 0,
-    velocityB: 0,
+    position: INITIAL_CART_X,
+    velocity: 0,
     phase: 'idle',
-    forceOnA: 0,
-    forceOnB: 0,
+    wallForce: 0,
   })
 
   return (
@@ -477,7 +433,8 @@ export default function Newton3Scene({ controls, runKey, onMetricsChange }) {
         />
 
         <InfiniteGuideRail3 friction={controls.friction} motionRef={motionRef} />
-        <CartRigPair
+        <Wall />
+        <CartRig3
           controls={controls}
           runKey={runKey}
           onMetricsChange={onMetricsChange}
