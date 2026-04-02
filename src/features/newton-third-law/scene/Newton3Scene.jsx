@@ -138,7 +138,7 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
   const wallLabelRef = useRef(null)
   const frictionLabelRef = useRef(null)
 
-  const cameraGoal = useRef(new THREE.Vector3(4.8, 2.85, 8.4))
+  const cameraGoal = useRef(new THREE.Vector3(-4.0, 2.85, 8.4))
   const { camera } = useThree()
 
   const massRatio = (controls.mass - 1) / 9
@@ -228,11 +228,11 @@ function CartRig3({ controls, runKey, onMetricsChange, motionRef }) {
 
     body.position.set(sim.position, 0.04, 0)
 
-    cameraGoal.current.set(sim.position + 5.3, 2.85, 8.4)
+    cameraGoal.current.set(sim.position - 4.0, 2.85, 8.4)
     camera.position.x = THREE.MathUtils.damp(camera.position.x, cameraGoal.current.x, 4.2, dt)
     camera.position.y = THREE.MathUtils.damp(camera.position.y, cameraGoal.current.y, 4.2, dt)
     camera.position.z = THREE.MathUtils.damp(camera.position.z, cameraGoal.current.z, 4.2, dt)
-    camera.lookAt(sim.position + 0.4, 0.28, 0)
+    camera.lookAt(WALL_X - 0.3, 0.28, 0)
 
     // Velocity arrow
     const vScale = getVelocityArrowScale(sim.velocity)
@@ -420,7 +420,7 @@ export default function Newton3Scene({ controls, runKey, onMetricsChange }) {
   return (
     <div className="newton-scene-canvas">
       <Canvas shadows="basic" dpr={[1, 1.8]}>
-        <PerspectiveCamera makeDefault position={[4.8, 2.85, 8.4]} fov={38} />
+        <PerspectiveCamera makeDefault position={[-4.0, 2.85, 8.4]} fov={38} />
         <color attach="background" args={['#0c1119']} />
         <fog attach="fog" args={['#0c1119', 12, 54]} />
         <ambientLight intensity={0.72} />
