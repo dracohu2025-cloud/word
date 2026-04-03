@@ -49,5 +49,26 @@ describe('render helpers', () => {
 
     expect(markup).toContain('汉字')
     expect(markup).not.toContain('中文词')
+    expect(markup).toContain('card-header-chinese-single')
+    expect(markup).toContain('card-word-echo')
+  })
+
+  test('keeps the english card header free of the chinese-only balance panel', () => {
+    const markup = renderCardMarkup({
+      word: 'Entropy',
+      inputType: 'english',
+      phonetic: '/ˈɛntrəpi/',
+      translation: '熵',
+      originalImage: 'A system drifting toward disorder.',
+      coreSymbolParts: ['system', 'dispersion', 'drift'],
+      coreSymbolResult: '不可逆散逸',
+      explanation: 'first paragraph || second paragraph',
+      epiphanyEn: 'Order costs effort.',
+      epiphanyCn: '秩序需要持续投入。',
+      mood: 'technical',
+    })
+
+    expect(markup).not.toContain('card-header-chinese-single')
+    expect(markup).not.toContain('card-word-echo')
   })
 })

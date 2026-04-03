@@ -29,6 +29,7 @@ export function renderCardMarkup(data) {
     ? word.charAt(0).toUpperCase() + word.slice(1)
     : word
   const wordClass = inputType === 'english' ? 'card-word-en' : 'card-word-cn'
+  const isChineseSingleCharacter = inputType === 'chinese' && displayWord.length === 1
   const coreSymbolParts = (data.coreSymbolParts || []).filter(Boolean).slice(0, 3)
   const formulaParts = coreSymbolParts
     .map(part => `<span class="formula-part-card"><span class="formula-token">${part}</span></span>`)
@@ -45,17 +46,35 @@ export function renderCardMarkup(data) {
   const explanationMarkup = formatExplanationParagraphs(data.explanation)
   const domain = MOOD_LABELS[data.mood] || '语言'
   const inputLabel = INPUT_TYPE_LABELS[inputType] || '词'
+  const headerClasses = [
+    'card-header',
+    'animate-in',
+    'animate-delay-1',
+    isChineseSingleCharacter ? 'card-header-chinese-single' : '',
+  ].filter(Boolean).join(' ')
+  const headerBalanceMarkup = isChineseSingleCharacter
+    ? `
+      <div class="card-header-balance" aria-hidden="true">
+        <div class="card-word-echo">${displayWord}</div>
+        <div class="card-balance-line"></div>
+        <div class="card-balance-note">${data.coreSymbolResult || data.translation || ''}</div>
+      </div>
+    `
+    : ''
 
   return `
-    <div class="card-header animate-in animate-delay-1">
-      <div class="card-ref">REF—${domain} / ${displayWord}</div>
-      <div class="card-meta-row">
-        <span class="card-badge">${inputLabel}</span>
-        <span class="card-badge card-badge-soft">${new Date().toISOString().split('T')[0]}</span>
+    <div class="${headerClasses}">
+      <div class="card-header-main">
+        <div class="card-ref">REF—${domain} / ${displayWord}</div>
+        <div class="card-meta-row">
+          <span class="card-badge">${inputLabel}</span>
+          <span class="card-badge card-badge-soft">${new Date().toISOString().split('T')[0]}</span>
+        </div>
+        <div class="card-word ${wordClass}">${displayWord}</div>
+        <div class="card-phonetic">${data.phonetic || ''}</div>
+        <div class="card-translation">${data.translation || ''}</div>
       </div>
-      <div class="card-word ${wordClass}">${displayWord}</div>
-      <div class="card-phonetic">${data.phonetic || ''}</div>
-      <div class="card-translation">${data.translation || ''}</div>
+      ${headerBalanceMarkup}
     </div>
 
     <div class="card-body">
